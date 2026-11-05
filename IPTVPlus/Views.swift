@@ -508,8 +508,9 @@ struct SettingsView: View {
                 }
                 Section {
                     VStack(spacing: 4) {
-                        Text("IPTV+ \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")").font(.footnote)
-                        Text("Gebaut von CoreCX").font(.footnote).bold()
+                        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+                        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+                        Text("Installierte Version: \(v).\(b) by CoreCX").font(.footnote).bold()
                     }
                     .frame(maxWidth: .infinity)
                     .foregroundColor(.secondary)

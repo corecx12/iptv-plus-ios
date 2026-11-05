@@ -169,7 +169,7 @@ class MainActivity : AppCompatActivity() {
             nav.addView(b)
         }
         val credit = TextView(this).apply {
-            text = "Gebaut von CoreCX"
+            text = "by CoreCX"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
             setTextColor(Color.parseColor("#8B93A1"))
             setPadding(dp(14), dp(20), dp(14), 0)
@@ -579,10 +579,10 @@ class MainActivity : AppCompatActivity() {
 
         // ---- Update: erst prüfen, dann fragen ----
         box.addView(label("UPDATE"))
-        val upInfo = label("Installierte Version: ${Updater.versionName(this)}", 15f, "#E8EAEE", 0)
+        val upInfo = label("Installierte Version: ${Updater.versionName(this)} by CoreCX", 15f, "#E8EAEE", 0)
         box.addView(upInfo)
         box.addView(button("Nach Update suchen") { checkUpdate(upInfo) })
-        box.addView(label("IPTV+ für Fire TV\nGebaut von CoreCX", 13f, "#8B93A1", 28))
+        box.addView(label("IPTV+ für Fire TV\nby CoreCX", 13f, "#8B93A1", 28))
         box.post { navButtons[Section.SETTINGS]?.requestFocus() }
     }
 
@@ -632,7 +632,7 @@ class MainActivity : AppCompatActivity() {
                 val r = Updater.latest()
                 val cur = Updater.currentVersion(this@MainActivity)
                 when {
-                    r == null -> info.text = "Installierte Version: ${Updater.versionName(this@MainActivity)} – kein Release gefunden."
+                    r == null -> info.text = "Installierte Version: ${Updater.versionName(this@MainActivity)} by CoreCX – kein Release gefunden."
                     r.number > cur -> {
                         info.text = "Update verfügbar: Build ${r.number} - CoreCX (installiert: ${Updater.versionName(this@MainActivity)})"
                         AlertDialog.Builder(this@MainActivity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
