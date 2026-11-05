@@ -39,6 +39,15 @@ public class MainForm : Form
     PMode _mode = PMode.None;
     Section _section = Section.Live;
 
+    // echtes Vollbild
+    FormBorderStyle _prevBorder;
+    FormWindowState _prevState;
+    Rectangle _prevBounds;
+    bool _isFs, _cursorHidden;
+    System.Windows.Forms.Timer _barTimer;
+    System.Windows.Forms.Timer _mouseTimer;
+    Point _lastMouse;
+
     // Zustand
     List<Category> _catList = new();
     List<Item> _currentItems = new();
@@ -252,8 +261,24 @@ public class MainForm : Form
         {
             _video.MouseClick += (_, e2) => { if (e2.Button == MouseButtons.Left && _mode == PMode.Mini) SetMode(PMode.Full); };
             _video.MouseDoubleClick += (_, _) => { if (_mode == PMode.Full) SetMode(PMode.Mini); };
+            _video.MouseMove += (_, _) => ShowBar();
         }
+        _playerPanel.MouseMove += (_, _) => ShowBar();
+        _fsBar.MouseMove += (_, _) => ShowBar();
         Resize += (_, _) => LayoutPlayer();
+
+        _barTimer = new System.Windows.Forms.Timer { Interval = 3000 };
+        _barTimer.Tick += (_, _) =>
+        {
+            _barTimer.Stop();
+            if (_mode == PMode.Full) { _fsBar.Visible = false; if (_isFs && !_cursorHidden) { Cursor.Hide(); _cursorHidden = true; } }
+        };
+        _mouseTimer = new System.Windows.Forms.Timer { Interval = 250 };
+        _mouseTimer.Tick += (_, _) =>
+        {
+            var p = Cursor.Position;
+            if (p != _lastMouse) { _lastMouse = p; ShowBar(); }
+        };
     }
 
     void LayoutPlayer()
@@ -284,9 +309,47 @@ public class MainForm : Form
     {
         _mode = m;
         _playerPanel.Visible = m != PMode.None;
+        if (m == PMode.Full) EnterFullscreen(); else ExitFullscreen();
         if (m == PMode.None) { _items.Invalidate(); return; }
         LayoutPlayer();
+        if (m == PMode.Full) ShowBar();
         _items.Invalidate();
+    }
+
+    void EnterFullscreen()
+    {
+        if (_isFs) return;
+        _isFs = true;
+        _prevBorder = FormBorderStyle; _prevState = WindowState; _prevBounds = Bounds;
+        if (WindowState == FormWindowState.Maximized) WindowState = FormWindowState.Normal;
+        FormBorderStyle = FormBorderStyle.None;
+        Bounds = Screen.FromControl(this).Bounds;
+        TopMost = true;
+        _lastMouse = Cursor.Position;
+        _mouseTimer.Start();
+    }
+
+    void ExitFullscreen()
+    {
+        if (!_isFs) return;
+        _isFs = false;
+        _mouseTimer.Stop();
+        _barTimer.Stop();
+        if (_cursorHidden) { Cursor.Show(); _cursorHidden = false; }
+        TopMost = false;
+        FormBorderStyle = _prevBorder;
+        if (_prevState == FormWindowState.Maximized) WindowState = FormWindowState.Maximized;
+        else { WindowState = FormWindowState.Normal; Bounds = _prevBounds; }
+    }
+
+    void ShowBar()
+    {
+        if (_cursorHidden) { Cursor.Show(); _cursorHidden = false; }
+        if (_mode == PMode.Full)
+        {
+            if (!_fsBar.Visible) _fsBar.Visible = true;
+            _barTimer.Stop(); _barTimer.Start();
+        }
     }
 
     void StartStream()
