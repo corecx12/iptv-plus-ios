@@ -22,23 +22,23 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: EXE bauen (self-contained, eine Datei)
+      - name: EXE bauen (self-contained Ordner mit VLC daneben)
         working-directory: windows
         shell: pwsh
         run: |
           $ver = "1.0.$env:GITHUB_RUN_NUMBER"
           dotnet publish IPTVPlus.csproj -c Release -r win-x64 --self-contained `
-            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
-            -p:EnableCompressionInSingleFile=true -p:DebugType=none `
-            -p:Version=$ver -o publish
-          Copy-Item "publish/IPTV+.exe" "IPTV+.exe"
-          Get-Item "IPTV+.exe" | Select-Object Name,Length
+            -p:PublishSingleFile=false -p:DebugType=none -p:Version=$ver -o "out/IPTV+"
+          if (!(Test-Path "out/IPTV+/libvlc/win-x64/libvlc.dll")) { throw "libvlc fehlt im Build" }
+          Get-ChildItem "out/IPTV+/IPTV+.exe" | Select-Object Name,Length
+          Compress-Archive -Path "out/IPTV+" -DestinationPath "IPTVPlus-Windows.zip" -Force
+          Get-Item "IPTVPlus-Windows.zip" | Select-Object Name,Length
 
       - name: Als Release veröffentlichen
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "win-${{ github.run_number }}" "windows/IPTV+.exe" `
+          gh release create "win-${{ github.run_number }}" "windows/IPTVPlus-Windows.zip" `
             --title "Build ${{ github.run_number }} - CoreCX" `
-            --notes "IPTV+ für Windows – eigenständige .exe mit VLC. by CoreCX."
+            --notes "IPTV+ für Windows – ZIP entpacken, IPTV+.exe starten. Echter VLC, kein Edge. by CoreCX."

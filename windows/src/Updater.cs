@@ -42,7 +42,7 @@ public static class Updater
             foreach (var a in assets.EnumerateArray())
             {
                 var name = a.TryGetProperty("name", out var nm) ? nm.GetString() ?? "" : "";
-                if (name.EndsWith(".exe") && (best == null || n > best.Number))
+                if (name.EndsWith(".zip") && (best == null || n > best.Number))
                     best = new Release(n, r.TryGetProperty("name", out var rn) ? rn.GetString() ?? tag : tag,
                         a.GetProperty("browser_download_url").GetString() ?? "");
             }
@@ -53,8 +53,9 @@ public static class Updater
     public static async Task<string> DownloadAsync(Release r, IProgress<int> progress, CancellationToken ct = default)
     {
         var dir = Path.Combine(Path.GetTempPath(), "iptvplus-update");
+        try { if (Directory.Exists(dir)) Directory.Delete(dir, true); } catch { }
         Directory.CreateDirectory(dir);
-        var outPath = Path.Combine(dir, $"IPTV+_{r.Number}.exe");
+        var outPath = Path.Combine(dir, $"IPTVPlus-{r.Number}.zip");
         using var resp = await Http.Client.GetAsync(r.Url, HttpCompletionOption.ResponseHeadersRead, ct);
         if (!resp.IsSuccessStatusCode) throw new ApiException($"Download fehlgeschlagen (HTTP {(int)resp.StatusCode})");
         var total = resp.Content.Headers.ContentLength ?? 0;
@@ -71,21 +72,31 @@ public static class Updater
         return outPath;
     }
 
-    /// neue EXE an die Stelle der laufenden kopieren und neu starten
-    public static void ApplyAndRestart(string newExe)
+    /// ZIP entpacken, über das Programm-Verzeichnis kopieren und neu starten
+    public static void ApplyAndRestart(string zipPath)
     {
         var current = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule!.FileName;
-        var bat = Path.Combine(Path.GetTempPath(), "iptvplus-update", "apply.cmd");
+        var appDir = Path.GetDirectoryName(current)!;
+        var work = Path.Combine(Path.GetTempPath(), "iptvplus-update");
+        var extract = Path.Combine(work, "extract");
+        try { if (Directory.Exists(extract)) Directory.Delete(extract, true); } catch { }
+        System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, extract);
+        // das ZIP enthält den Ordner "IPTV+" – dessen Inhalt ist die neue Version
+        var inner = Path.Combine(extract, "IPTV+");
+        var src = Directory.Exists(inner) ? inner : extract;
+
+        var bat = Path.Combine(work, "apply.cmd");
         var script = $@"@echo off
 setlocal
-set ""target={current}""
-set ""source={newExe}""
+set ""app={appDir}""
+set ""src={src}""
 :wait
 timeout /t 1 /nobreak >nul
-copy /y ""%source%"" ""%target%"" >nul 2>&1
+copy /y ""%src%\IPTV+.exe"" ""%app%\IPTV+.exe"" >nul 2>&1
 if errorlevel 1 goto wait
-start """" ""%target%""
-del ""%source%"" >nul 2>&1
+xcopy ""%src%\*"" ""%app%\"" /e /y /i >nul
+start """" ""%app%\IPTV+.exe""
+rmdir /s /q ""{work}"" >nul 2>&1
 ";
         File.WriteAllText(bat, script);
         Process.Start(new ProcessStartInfo { FileName = "cmd.exe", Arguments = $"/c \"{bat}\"", CreateNoWindow = true, UseShellExecute = false });
