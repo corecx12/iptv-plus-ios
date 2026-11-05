@@ -29,14 +29,25 @@ jobs:
 
       - name: Signierschlüssel aus Geheimnis
         env:
-          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
-        run: echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          S1: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          S2: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          # Leerzeichen/Zeilenumbrüche vom Einfügen entfernen; vertauschte Werte erkennen
+          A=$(printf '%s' "$S1" | tr -d ' \r\n\t')
+          B=$(printf '%s' "$S2" | tr -d ' \r\n\t')
+          echo "Länge Geheimnis 1: ${#A}, Länge Geheimnis 2: ${#B} (erwartet ca. 3516 und 32)"
+          KS="$RUNNER_TEMP/release.keystore"
+          if printf '%s' "$A" | base64 -d > "$KS" 2>/dev/null && [ "$(stat -c%s "$KS")" -gt 1000 ]; then PW="$B"
+          elif printf '%s' "$B" | base64 -d > "$KS" 2>/dev/null && [ "$(stat -c%s "$KS")" -gt 1000 ]; then PW="$A"; echo "Hinweis: Geheimnisse waren vertauscht"
+          else echo "::error::Signierschlüssel unlesbar – ANDROID_KEYSTORE_B64 bitte neu eintragen"; exit 1; fi
+          echo "::add-mask::$PW"
+          echo "KEYSTORE_PASSWORD=$PW" >> "$GITHUB_ENV"
+          keytool -list -keystore "$KS" -storepass "$PW" >/dev/null || { echo "::error::Passwort passt nicht zum Schlüssel – ANDROID_KEYSTORE_PASSWORD bitte prüfen"; exit 1; }
 
       - name: APK bauen
         working-directory: android
         env:
           KEYSTORE_FILE: ${{ runner.temp }}/release.keystore
-          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           set +e
           gradle assembleRelease --no-daemon --stacktrace > build.log 2>&1
