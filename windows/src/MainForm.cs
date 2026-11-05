@@ -34,6 +34,8 @@ public class MainForm : Form
     MediaPlayer _mp;
     Label _playerMsg;
     Button _miniClose;
+    Panel _fsBar;
+    Button _fsBack, _fsPrev, _fsNext, _fsStop;
     PMode _mode = PMode.None;
     Section _section = Section.Live;
 
@@ -222,6 +224,30 @@ public class MainForm : Form
         _playerPanel.Controls.Add(_miniClose);
         _miniClose.BringToFront();
 
+        // Maus-Bedienleiste im Vollbild (oben angedockt, damit sie das Video nicht überlagert)
+        _fsBar = new Panel { Dock = DockStyle.Top, Height = 52, BackColor = ColorFromHex("#16191E"), Visible = false };
+        Button FsBtn(string t, string tip)
+        {
+            var b = new Button { Text = t, FlatStyle = FlatStyle.Flat, ForeColor = Color.White, BackColor = Color.FromArgb(70, 255, 255, 255), Width = 46, Height = 38, Font = new Font("Segoe UI", 12), Margin = new Padding(6, 7, 0, 7) };
+            b.FlatAppearance.BorderSize = 0;
+            var tt = new ToolTip(); tt.SetToolTip(b, tip);
+            return b;
+        }
+        var fsFlow = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Padding = new Padding(8, 0, 0, 0) };
+        _fsBack = FsBtn("←", "Verkleinern");
+        _fsBack.Width = 110; _fsBack.Text = "←  Zurück";
+        _fsBack.Click += (_, _) => SetMode(PMode.Mini);
+        _fsPrev = FsBtn("▲", "Vorheriger Sender");
+        _fsPrev.Click += (_, _) => Zap(-1);
+        _fsNext = FsBtn("▼", "Nächster Sender");
+        _fsNext.Click += (_, _) => Zap(1);
+        _fsStop = FsBtn("✕", "Beenden");
+        _fsStop.Click += (_, _) => StopPlayer();
+        fsFlow.Controls.Add(_fsBack); fsFlow.Controls.Add(_fsPrev); fsFlow.Controls.Add(_fsNext); fsFlow.Controls.Add(_fsStop);
+        _fsBar.Controls.Add(fsFlow);
+        _playerPanel.Controls.Add(_fsBar);
+        _video?.SendToBack();   // Video als Fill hinter die angedockten Leisten
+
         if (_video != null)
         {
             _video.MouseClick += (_, e2) => { if (e2.Button == MouseButtons.Left && _mode == PMode.Mini) SetMode(PMode.Full); };
@@ -237,6 +263,9 @@ public class MainForm : Form
             _playerPanel.Bounds = new Rectangle(0, 0, ClientSize.Width, ClientSize.Height);
             _miniClose.Visible = false;
             _playerMsg.Visible = true;
+            bool live = _playingKind == Kind.Live && _zap.Count > 1;
+            _fsPrev.Visible = live; _fsNext.Visible = live;
+            _fsBar.Visible = true;
         }
         else if (_mode == PMode.Mini)
         {
@@ -245,8 +274,10 @@ public class MainForm : Form
             _miniClose.Location = new Point(w - 30, 4);
             _miniClose.Visible = true;
             _playerMsg.Visible = false;
+            _fsBar.Visible = false;
         }
         _playerPanel.BringToFront();
+        _miniClose.BringToFront();
     }
 
     void SetMode(PMode m)
