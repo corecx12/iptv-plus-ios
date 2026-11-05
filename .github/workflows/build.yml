@@ -3,6 +3,9 @@ name: IPA bauen
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'android/**'
+      - '.github/workflows/android.yml'
   workflow_dispatch:
 
 permissions:

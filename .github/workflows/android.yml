@@ -1,0 +1,52 @@
+name: APK bauen (Fire TV)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: APK bauen
+        working-directory: android
+        run: gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log; test ${PIPESTATUS[0]} -eq 0 || { grep -E "^e: |error:|FAILURE|What went wrong" -A3 build.log | head -80; exit 1; }
+
+      - name: APK umbenennen
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk IPTVPlus-FireTV.apk
+          ls -la IPTVPlus-FireTV.apk
+
+      - name: Als Release veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "firetv-${{ github.run_number }}" IPTVPlus-FireTV.apk \
+            --title "IPTV+ für Fire TV (Build ${{ github.run_number }})" \
+            --notes "APK für Fire TV Stick – per Downloader-App oder adb installieren. Gebaut von CoreCX."
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-build-log
+          path: android/build.log
+          if-no-files-found: ignore

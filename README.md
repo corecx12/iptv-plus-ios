@@ -11,3 +11,7 @@ Jeder Push auf `main` baut über GitHub Actions eine **unsignierte** `IPTVPlus.i
 ## Installation
 Mit Sideloadly oder AltStore und der eigenen Apple-ID signieren und installieren
 (kostenlose Apple-ID: alle 7 Tage neu signieren).
+
+## Fire TV (Android)
+Ordner `android/` – Kotlin + libVLC, Bedienung mit der Fernbedienung.
+Jeder Push baut über GitHub Actions `IPTVPlus-FireTV.apk` und veröffentlicht sie als Release `firetv-N`.

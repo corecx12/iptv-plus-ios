@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#0E1013</color>
+    <color name="panel">#16191E</color>
+    <color name="panel2">#1D2128</color>
+    <color name="accent">#3D8BFD</color>
+    <color name="text">#E8EAEE</color>
+    <color name="muted">#8B93A1</color>
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:textColor">@color/text</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+</resources>
