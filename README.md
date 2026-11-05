@@ -15,3 +15,7 @@ Mit Sideloadly oder AltStore und der eigenen Apple-ID signieren und installieren
 ## Fire TV (Android)
 Ordner `android/` – Kotlin + libVLC, Bedienung mit der Fernbedienung.
 Jeder Push baut über GitHub Actions `IPTVPlus-FireTV.apk` und veröffentlicht sie als Release `firetv-N`.
+
+## Windows (.exe)
+Ordner `windows/` – .NET 8 WinForms + LibVLCSharp (echter VLC, alle Formate, kein Edge).
+Jeder Push baut über GitHub Actions eine eigenständige `IPTV+.exe` und veröffentlicht sie als Release `win-N`.

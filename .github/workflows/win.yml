@@ -1,0 +1,44 @@
+name: Windows EXE bauen
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'windows/**'
+      - '.github/workflows/win.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: EXE bauen (self-contained, eine Datei)
+        working-directory: windows
+        shell: pwsh
+        run: |
+          $ver = "1.0.$env:GITHUB_RUN_NUMBER"
+          dotnet publish IPTVPlus.csproj -c Release -r win-x64 --self-contained `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true -p:DebugType=none `
+            -p:Version=$ver -o publish
+          Copy-Item "publish/IPTV+.exe" "IPTV+.exe"
+          Get-Item "IPTV+.exe" | Select-Object Name,Length
+
+      - name: Als Release veröffentlichen
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "win-${{ github.run_number }}" "windows/IPTV+.exe" `
+            --title "Build ${{ github.run_number }} - CoreCX" `
+            --notes "IPTV+ für Windows – eigenständige .exe mit VLC. by CoreCX."
