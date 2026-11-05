@@ -175,6 +175,37 @@ enum Keychain {
         guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let d = out as? Data else { return nil }
         return try? JSONDecoder().decode(Account.self, from: d)
     }
+
+    // Mehrere Konten (als eigener Schlüsselbund-Eintrag)
+    static let accountsService = "iptvplus.accounts"
+
+    static func saveAccounts(_ list: [SavedAccount]) {
+        let base: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: accountsService]
+        SecItemDelete(base as CFDictionary)
+        guard !list.isEmpty, let data = try? JSONEncoder().encode(list) else { return }
+        var add = base
+        add[kSecValueData as String] = data
+        add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+        SecItemAdd(add as CFDictionary, nil)
+    }
+
+    static func loadAccounts() -> [SavedAccount] {
+        let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: accountsService,
+                                kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]
+        var out: AnyObject?
+        if SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let d = out as? Data,
+           let list = try? JSONDecoder().decode([SavedAccount].self, from: d) {
+            return list
+        }
+        // einzelnes Konto aus älterer Version übernehmen
+        if let old = load() {
+            let migrated = [SavedAccount(label: "Konto 1", account: old)]
+            saveAccounts(migrated)
+            save(nil)
+            return migrated
+        }
+        return []
+    }
 }
 
 // MARK: - Deutsch-Erkennung und Suche

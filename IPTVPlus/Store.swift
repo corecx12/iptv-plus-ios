@@ -1,9 +1,16 @@
 import Foundation
 import SwiftUI
 
+struct SavedAccount: Codable, Identifiable, Equatable {
+    var id = UUID()
+    var label: String
+    var account: Account
+}
+
 @MainActor
 final class Store: ObservableObject {
-    @Published var account: Account?
+    @Published var accounts: [SavedAccount] = []
+    @Published var activeIndex: Int = 0
     @Published var userInfo: [String: String] = [:]
     @Published var deOnly: Bool {
         didSet { UserDefaults.standard.set(deOnly, forKey: "deOnly"); listCache = listCache.filter { !$0.key.hasPrefix("de:") } }
@@ -16,27 +23,66 @@ final class Store: ObservableObject {
     private var listCache: [String: [Item]] = [:]
     private var epgTask: Task<Void, Never>?
 
+    var account: Account? { accounts.indices.contains(activeIndex) ? accounts[activeIndex].account : nil }
     var api: XtreamAPI? { account.map { XtreamAPI(acc: $0) } }
 
     init() {
         deOnly = UserDefaults.standard.object(forKey: "deOnly") as? Bool ?? true
-        account = Keychain.load()
+        accounts = Keychain.loadAccounts()
+        activeIndex = min(UserDefaults.standard.integer(forKey: "activeIndex"), max(0, accounts.count - 1))
         epg = Store.loadEPGCache()
     }
 
-    // MARK: Konto
+    // MARK: Konten
 
-    func login(server: String, username: String, password: String) async throws {
+    private func persist() {
+        Keychain.saveAccounts(accounts)
+        UserDefaults.standard.set(activeIndex, forKey: "activeIndex")
+    }
+
+    private func resetCaches() { catCache = [:]; listCache = [:]; epg = nil; Store.deleteEPGCache() }
+
+    /// Konto prüfen und speichern. index == nil -> neues Konto, sonst bestehendes ersetzen.
+    func saveAccount(label: String, server: String, username: String, password: String, index: Int?) async throws {
         var pw = password.trimmingCharacters(in: .whitespaces)
-        if pw.isEmpty, let old = account?.password { pw = old }
+        if pw.isEmpty, let i = index, accounts.indices.contains(i) { pw = accounts[i].account.password }
         let acc = Account(server: Account.normalize(server), username: username.trimmingCharacters(in: .whitespaces), password: pw)
         let info = try await XtreamAPI(acc: acc).userInfo()
-        let changed = acc != account
-        Keychain.save(acc)
-        account = acc
-        userInfo = info.mapValues { str($0) }
-        if changed { catCache = [:]; listCache = [:]; epg = nil; Store.deleteEPGCache() }
+        let name = label.trimmingCharacters(in: .whitespaces).isEmpty ? "Konto \(accounts.count + 1)" : label.trimmingCharacters(in: .whitespaces)
+        let wasActive = index == activeIndex
+        if let i = index, accounts.indices.contains(i) {
+            accounts[i] = SavedAccount(id: accounts[i].id, label: name, account: acc)
+            if wasActive { userInfo = info.mapValues { str($0) }; resetCaches() }
+        } else {
+            accounts.append(SavedAccount(label: name, account: acc))
+            activeIndex = accounts.count - 1
+            userInfo = info.mapValues { str($0) }
+            resetCaches()
+        }
+        persist()
         loadEPG(force: false)
+    }
+
+    func switchTo(_ index: Int) {
+        guard accounts.indices.contains(index), index != activeIndex else { return }
+        PlayerModel.shared.stop()
+        activeIndex = index
+        userInfo = [:]
+        resetCaches()
+        persist()
+        Task { await refreshUserInfo() }
+        loadEPG(force: false)
+    }
+
+    func removeAccount(_ index: Int) {
+        guard accounts.indices.contains(index) else { return }
+        PlayerModel.shared.stop()
+        accounts.remove(at: index)
+        activeIndex = min(activeIndex, max(0, accounts.count - 1))
+        userInfo = [:]
+        resetCaches()
+        persist()
+        if account != nil { Task { await refreshUserInfo() }; loadEPG(force: false) }
     }
 
     func refreshUserInfo() async {
@@ -46,12 +92,12 @@ final class Store: ObservableObject {
 
     func logout() {
         PlayerModel.shared.stop()
-        Keychain.save(nil)
-        account = nil
+        accounts = []
+        activeIndex = 0
+        Keychain.saveAccounts([])
+        UserDefaults.standard.set(0, forKey: "activeIndex")
         userInfo = [:]
-        catCache = [:]; listCache = [:]
-        epg = nil
-        Store.deleteEPGCache()
+        resetCaches()
     }
 
     // MARK: Listen

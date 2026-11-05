@@ -502,32 +502,62 @@ class MainActivity : AppCompatActivity() {
         box.removeAllViews()
         val acc = repo.account
         box.addView(label("Einstellungen", 24f, "#E8EAEE", 0))
-        if (acc != null) {
-            val u = repo.userInfo
-            val exp = u.s("exp_date").toLongOrNull()?.takeIf { it > 0 }?.let { SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY).format(Date(it * 1000)) } ?: "unbegrenzt"
-            box.addView(label("KONTO"))
-            box.addView(label("Benutzer: ${u.s("username").ifEmpty { acc.username }}\nStatus: ${u.s("status").ifEmpty { "–" }}\nGültig bis: $exp\nVerbindungen: ${u.s("active_cons").ifEmpty { "0" }} von ${u.s("max_connections").ifEmpty { "–" }}\nServer: ${acc.server}", 15f, "#E8EAEE", 0))
+
+        // ---- Konten ----
+        box.addView(label("KONTEN"))
+        if (repo.accounts.isEmpty()) {
+            box.addView(label("Noch kein Konto. Unten Zugangsdaten eingeben und speichern.", 15f, "#8B93A1", 0))
         }
-        box.addView(label(if (acc == null) "ANMELDUNG – Xtream-Codes-Zugangsdaten" else "ANMELDUNG / ZUGANGSDATEN"))
-        val fServer = field("Server-URL (http://anbieter:8080)", acc?.server ?: "", false)
-        val fUser = field("Benutzername", acc?.username ?: "", false)
-        val fPass = field(if (acc == null) "Passwort" else "Passwort (leer = unverändert)", "", true)
+        for ((i, sa) in repo.accounts.withIndex()) {
+            val active = i == repo.activeIndex
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+                setBackgroundResource(R.drawable.focus_bg); setPadding(dp(10), dp(8), dp(10), dp(8))
+                isFocusable = true; isClickable = true
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(4) }
+            }
+            row.addView(TextView(this).apply {
+                text = (if (active) "●  " else "○  ") + sa.label + "   (" + sa.account.username + ")"
+                setTextColor(Color.parseColor(if (active) "#3D8BFD" else "#E8EAEE"))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            })
+            row.setOnClickListener {
+                if (!active) { repo.switchTo(i); stopPlayer(); Toast.makeText(this, "Konto „${sa.label}“ aktiv", Toast.LENGTH_SHORT).show(); lifecycleScope.launch { repo.refreshUserInfo(); loadEpg(false); buildSettings() } }
+            }
+            row.setOnLongClickListener { editAccountDialog(i); true }
+            box.addView(row)
+        }
+        box.addView(label("Tipp: Konto antippen = umschalten · lange drücken (OK gedrückt halten) = bearbeiten/löschen", 12f, "#8B93A1", 2))
+
+        // ---- Konto hinzufügen / Zugangsdaten ----
+        box.addView(label(if (repo.accounts.isEmpty()) "ANMELDUNG – Xtream-Codes-Zugangsdaten" else "KONTO HINZUFÜGEN"))
+        val fLabel = field("Name (z. B. Wohnzimmer, Konto 2)", "", false)
+        val fServer = field("Server-URL (http://anbieter:8080)", "", false)
+        val fUser = field("Benutzername", "", false)
+        val fPass = field("Passwort", "", true)
         val msg = label("", 14f, "#FF6B6B", 2)
-        box.addView(fServer); box.addView(fUser); box.addView(fPass); box.addView(msg)
-        box.addView(button("Speichern & verbinden") {
+        box.addView(fLabel); box.addView(fServer); box.addView(fUser); box.addView(fPass); box.addView(msg)
+        box.addView(button(if (repo.accounts.isEmpty()) "Speichern & verbinden" else "Konto hinzufügen & verbinden") {
             msg.setTextColor(Color.parseColor("#8B93A1")); msg.text = "Verbinde…"
             lifecycleScope.launch {
                 try {
-                    repo.login(fServer.text.toString(), fUser.text.toString(), fPass.text.toString())
+                    repo.saveAccount(fLabel.text.toString(), fServer.text.toString(), fUser.text.toString(), fPass.text.toString(), -1)
                     msg.setTextColor(Color.parseColor("#4CC38A")); msg.text = "✓ Verbunden"
-                    loadEpg(false)
+                    repo.refreshUserInfo(); loadEpg(false)
                     showSection(Section.LIVE)
                 } catch (e: Exception) {
                     msg.setTextColor(Color.parseColor("#FF6B6B")); msg.text = e.message ?: "Fehler"
                 }
             }
         })
+
         if (acc != null) {
+            val u = repo.userInfo
+            val exp = u.s("exp_date").toLongOrNull()?.takeIf { it > 0 }?.let { SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY).format(Date(it * 1000)) } ?: "unbegrenzt"
+            box.addView(label("AKTIVES KONTO"))
+            box.addView(label("Benutzer: ${u.s("username").ifEmpty { acc.username }}\nStatus: ${u.s("status").ifEmpty { "–" }}\nGültig bis: $exp\nVerbindungen: ${u.s("active_cons").ifEmpty { "0" }} von ${u.s("max_connections").ifEmpty { "–" }}\nServer: ${acc.server}", 15f, "#E8EAEE", 0))
+
             box.addView(label("FILME & SERIEN"))
             box.addView(CheckBox(this).apply {
                 text = "Nur deutsche Fassungen anzeigen und durchsuchen"
@@ -540,51 +570,94 @@ class MainActivity : AppCompatActivity() {
             box.addView(label(if (e != null) "Quelle: ${e.source}\nStand: ${SimpleDateFormat("dd.MM. HH:mm", Locale.GERMANY).format(Date(e.updated * 1000))}\nSender: ${e.channels.size}"
                 else if (repo.epgLoading) "Wird geladen…" else "Noch nicht geladen.", 15f, "#E8EAEE", 0))
             box.addView(button("TV-Programm jetzt aktualisieren") { loadEpg(true); Toast.makeText(this, "TV-Programm wird geladen…", Toast.LENGTH_SHORT).show() })
-            box.addView(label("ABMELDEN"))
-            box.addView(button("Abmelden (Zugangsdaten löschen)") {
-                AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                    .setMessage("Abmelden und Zugangsdaten von diesem Gerät löschen?")
-                    .setPositiveButton("Abmelden") { _, _ -> stopPlayer(); repo.logout(); showSection(Section.SETTINGS) }
-                    .setNegativeButton("Abbrechen", null).show()
-            })
         }
-        // ---- Update ----
+
+        // ---- Update: erst prüfen, dann fragen ----
         box.addView(label("UPDATE"))
-        val upInfo = label("Installierte Version: ${Updater.versionName(this)} – suche nach Updates…", 15f, "#E8EAEE", 0)
+        val upInfo = label("Installierte Version: ${Updater.versionName(this)}", 15f, "#E8EAEE", 0)
         box.addView(upInfo)
-        box.addView(button("Neueste Version herunterladen & installieren") { runUpdate(upInfo) })
-        lifecycleScope.launch {
-            try {
-                val r = Updater.latest()
-                val cur = Updater.currentVersion(this@MainActivity)
-                upInfo.text = when {
-                    r == null -> "Installierte Version: ${Updater.versionName(this@MainActivity)} – kein Update gefunden."
-                    r.number > cur -> "Installierte Version: ${Updater.versionName(this@MainActivity)} – NEU verfügbar: Build ${r.number}"
-                    else -> "Installierte Version: ${Updater.versionName(this@MainActivity)} – aktuell (neuestes Release: Build ${r.number})"
-                }
-            } catch (e: Exception) {
-                upInfo.text = "Installierte Version: ${Updater.versionName(this@MainActivity)} – Update-Prüfung fehlgeschlagen: ${e.message}"
-            }
-        }
+        box.addView(button("Nach Update suchen") { checkUpdate(upInfo) })
         box.addView(label("IPTV+ für Fire TV\nGebaut von CoreCX", 13f, "#8B93A1", 28))
-        (if (acc == null) fServer else box.getChildAt(0)).post { (if (acc == null) fServer else navButtons[Section.SETTINGS])?.requestFocus() }
+        box.post { navButtons[Section.SETTINGS]?.requestFocus() }
+    }
+
+    /** Konto bearbeiten oder löschen */
+    private fun editAccountDialog(index: Int) {
+        val sa = repo.accounts.getOrNull(index) ?: return
+        val pad = dp(20)
+        val wrap = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(pad, pad, pad, 0) }
+        val fLabel = field("Name", sa.label, false)
+        val fServer = field("Server-URL", sa.account.server, false)
+        val fUser = field("Benutzername", sa.account.username, false)
+        val fPass = field("Passwort (leer = unverändert)", "", true)
+        wrap.addView(fLabel); wrap.addView(fServer); wrap.addView(fUser); wrap.addView(fPass)
+        AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setTitle("Konto bearbeiten")
+            .setView(wrap)
+            .setPositiveButton("Speichern") { _, _ ->
+                lifecycleScope.launch {
+                    try {
+                        repo.saveAccount(fLabel.text.toString(), fServer.text.toString(), fUser.text.toString(), fPass.text.toString(), index)
+                        repo.refreshUserInfo(); buildSettings()
+                        Toast.makeText(this@MainActivity, "Gespeichert", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(this@MainActivity, "Fehler: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+            .setNegativeButton("Löschen") { _, _ ->
+                AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                    .setMessage("Konto „${sa.label}“ wirklich löschen?")
+                    .setPositiveButton("Löschen") { _, _ -> stopPlayer(); repo.removeAccount(index); lifecycleScope.launch { repo.refreshUserInfo(); loadEpg(false) }; buildSettings() }
+                    .setNegativeButton("Abbrechen", null).show()
+            }
+            .setNeutralButton("Abbrechen", null)
+            .show()
     }
 
     private var updating = false
 
-    /** lädt immer das neueste Release herunter und startet die Installation (auch zum Neu-Installieren) */
-    private fun runUpdate(info: TextView) {
+    /** Schritt 1: nur prüfen, ob ein Update vorhanden ist; bei Bedarf nachfragen */
+    private fun checkUpdate(info: TextView) {
+        if (updating) return
+        updating = true
+        info.text = "Suche nach Update…"
+        lifecycleScope.launch {
+            try {
+                val r = Updater.latest()
+                val cur = Updater.currentVersion(this@MainActivity)
+                when {
+                    r == null -> info.text = "Installierte Version: ${Updater.versionName(this@MainActivity)} – kein Release gefunden."
+                    r.number > cur -> {
+                        info.text = "Update verfügbar: Build ${r.number} (installiert: ${Updater.versionName(this@MainActivity)})"
+                        AlertDialog.Builder(this@MainActivity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                            .setTitle("Update verfügbar")
+                            .setMessage("Build ${r.number} ist verfügbar.\nJetzt herunterladen und installieren?")
+                            .setPositiveButton("Installieren") { _, _ -> runUpdate(info, r) }
+                            .setNegativeButton("Später", null)
+                            .show()
+                    }
+                    else -> info.text = "Du hast die neueste Version (Build $cur)."
+                }
+            } catch (e: Exception) {
+                info.text = "Update-Prüfung fehlgeschlagen: ${e.message}"
+            } finally {
+                updating = false
+            }
+        }
+    }
+
+    /** Schritt 2: nach Zustimmung herunterladen und installieren */
+    private fun runUpdate(info: TextView, r: Updater.Release) {
         if (updating) return
         updating = true
         lifecycleScope.launch {
             try {
-                info.text = "Suche neueste Version…"
-                val r = Updater.latest() ?: throw ApiException("Kein Release gefunden")
                 info.text = "Lade Build ${r.number}… 0 %"
                 val apk = Updater.download(this@MainActivity, r) { p -> info.text = "Lade Build ${r.number}… $p %" }
                 info.text = "Build ${r.number} geladen – Installation wird gestartet…"
                 if (!Updater.install(this@MainActivity, apk)) {
-                    info.text = "Bitte „Apps unbekannter Herkunft“ für IPTV+ erlauben, dann zurück und den Update-Knopf erneut drücken."
+                    info.text = "Bitte „Apps unbekannter Herkunft“ für IPTV+ erlauben, dann „Nach Update suchen“ erneut."
                 }
             } catch (e: Exception) {
                 info.text = "Update fehlgeschlagen: ${e.message}"

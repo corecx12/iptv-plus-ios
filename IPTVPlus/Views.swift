@@ -57,7 +57,7 @@ struct LoginView: View {
                 Button {
                     busy = true; error = ""
                     Task {
-                        do { try await store.login(server: server, username: user, password: pass) }
+                        do { try await store.saveAccount(label: "", server: server, username: user, password: pass, index: nil) }
                         catch { self.error = error.localizedDescription }
                         busy = false
                     }
@@ -447,12 +447,9 @@ struct EPGRow: View {
 
 struct SettingsView: View {
     @EnvironmentObject var store: Store
-    @State private var server = ""
-    @State private var user = ""
-    @State private var pass = ""
-    @State private var msg = ""
-    @State private var busy = false
     @State private var confirmLogout = false
+    @State private var editing: SavedAccount?
+    @State private var addNew = false
 
     func date(_ s: String) -> String {
         guard let t = Double(s), t > 0 else { return "unbegrenzt" }
@@ -463,43 +460,52 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Konto") {
-                    LabeledContent("Benutzer", value: store.userInfo["username"] ?? store.account?.username ?? "")
-                    LabeledContent("Status", value: store.userInfo["status"] ?? "–")
-                    LabeledContent("Gültig bis", value: date(store.userInfo["exp_date"] ?? ""))
-                    LabeledContent("Verbindungen", value: "\(store.userInfo["active_cons"] ?? "0") von \(store.userInfo["max_connections"] ?? "–")")
-                    LabeledContent("Server", value: store.account?.server ?? "")
-                }
-                Section("Anmeldung / Zugangsdaten") {
-                    TextField("Server-URL", text: $server).keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    TextField("Benutzername", text: $user).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    SecureField("Passwort (leer = unverändert)", text: $pass).textInputAutocapitalization(.never).autocorrectionDisabled().textContentType(.password)
-                    if !msg.isEmpty { Text(msg).font(.footnote).foregroundColor(msg.hasPrefix("✓") ? .green : .red) }
-                    Button(busy ? "Verbinde…" : "Speichern & verbinden") {
-                        busy = true; msg = ""
-                        Task {
-                            do { try await store.login(server: server, username: user, password: pass); msg = "✓ Verbunden"; pass = "" }
-                            catch { msg = error.localizedDescription }
-                            busy = false
-                        }
-                    }.disabled(busy)
-                }
-                Section("Filme & Serien") {
-                    Toggle("Nur deutsche Fassungen anzeigen und durchsuchen", isOn: $store.deOnly)
-                }
-                Section("TV-Programm") {
-                    if let e = store.epg {
-                        LabeledContent("Quelle", value: e.source)
-                        LabeledContent("Stand", value: Date(timeIntervalSince1970: e.updated).formatted(date: .abbreviated, time: .shortened))
-                        LabeledContent("Sender", value: "\(e.channels.count)")
-                    } else {
-                        Text(store.epgLoading ? "Wird geladen…" : "Noch nicht geladen.").foregroundColor(.secondary)
-                    }
-                    Button(store.epgLoading ? "Lädt…" : "Jetzt aktualisieren") { store.loadEPG(force: true) }.disabled(store.epgLoading)
-                }
                 Section {
-                    Button("Abmelden", role: .destructive) { confirmLogout = true }
-                } footer: { Text("Entfernt die gespeicherten Zugangsdaten von diesem iPhone.") }
+                    ForEach(Array(store.accounts.enumerated()), id: \.element.id) { i, sa in
+                        Button {
+                            if i != store.activeIndex { store.switchTo(i) }
+                        } label: {
+                            HStack {
+                                Image(systemName: i == store.activeIndex ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(i == store.activeIndex ? .accentColor : .secondary)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(sa.label).foregroundColor(.primary)
+                                    Text(sa.account.username).font(.caption).foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                Button { editing = sa } label: { Image(systemName: "pencil") }
+                                    .buttonStyle(.borderless).foregroundColor(.accentColor)
+                            }
+                        }
+                    }
+                    .onDelete { idx in idx.forEach { store.removeAccount($0) } }
+                    Button { addNew = true } label: { Label("Konto hinzufügen", systemImage: "plus") }
+                } header: { Text("Konten") } footer: { Text("Antippen wechselt das Konto. Zum Löschen nach links wischen.") }
+
+                if store.account != nil {
+                    Section("Aktives Konto") {
+                        LabeledContent("Status", value: store.userInfo["status"] ?? "–")
+                        LabeledContent("Gültig bis", value: date(store.userInfo["exp_date"] ?? ""))
+                        LabeledContent("Verbindungen", value: "\(store.userInfo["active_cons"] ?? "0") von \(store.userInfo["max_connections"] ?? "–")")
+                        LabeledContent("Server", value: store.account?.server ?? "")
+                    }
+                    Section("Filme & Serien") {
+                        Toggle("Nur deutsche Fassungen anzeigen und durchsuchen", isOn: $store.deOnly)
+                    }
+                    Section("TV-Programm") {
+                        if let e = store.epg {
+                            LabeledContent("Quelle", value: e.source)
+                            LabeledContent("Stand", value: Date(timeIntervalSince1970: e.updated).formatted(date: .abbreviated, time: .shortened))
+                            LabeledContent("Sender", value: "\(e.channels.count)")
+                        } else {
+                            Text(store.epgLoading ? "Wird geladen…" : "Noch nicht geladen.").foregroundColor(.secondary)
+                        }
+                        Button(store.epgLoading ? "Lädt…" : "Jetzt aktualisieren") { store.loadEPG(force: true) }.disabled(store.epgLoading)
+                    }
+                    Section {
+                        Button("Alle Konten abmelden", role: .destructive) { confirmLogout = true }
+                    } footer: { Text("Entfernt alle gespeicherten Zugangsdaten von diesem iPhone.") }
+                }
                 Section {
                     VStack(spacing: 4) {
                         Text("IPTV+ \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")").font(.footnote)
@@ -510,12 +516,60 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Einstellungen")
-            .onAppear {
-                server = store.account?.server ?? ""
-                user = store.account?.username ?? ""
-            }
-            .confirmationDialog("Abmelden und Zugangsdaten löschen?", isPresented: $confirmLogout, titleVisibility: .visible) {
+            .sheet(isPresented: $addNew) { AccountEditor(index: nil, saved: nil) }
+            .sheet(item: $editing) { sa in AccountEditor(index: store.accounts.firstIndex(of: sa), saved: sa) }
+            .confirmationDialog("Alle Konten abmelden und Zugangsdaten löschen?", isPresented: $confirmLogout, titleVisibility: .visible) {
                 Button("Abmelden", role: .destructive) { PlayerHost.shared.close(); store.logout() }
+            }
+        }
+    }
+}
+
+/// Konto anlegen oder bearbeiten
+struct AccountEditor: View {
+    @EnvironmentObject var store: Store
+    @Environment(\.dismiss) private var dismiss
+    let index: Int?
+    let saved: SavedAccount?
+    @State private var label = ""
+    @State private var server = ""
+    @State private var user = ""
+    @State private var pass = ""
+    @State private var busy = false
+    @State private var error = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Name") {
+                    TextField("z. B. Wohnzimmer, Konto 2", text: $label)
+                }
+                Section("Xtream-Codes-Zugangsdaten") {
+                    TextField("Server-URL (http://anbieter:8080)", text: $server)
+                        .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    TextField("Benutzername", text: $user).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    SecureField(saved == nil ? "Passwort" : "Passwort (leer = unverändert)", text: $pass)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled().textContentType(.password)
+                }
+                if !error.isEmpty { Text(error).foregroundColor(.red).font(.footnote) }
+            }
+            .navigationTitle(saved == nil ? "Konto hinzufügen" : "Konto bearbeiten")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(busy ? "…" : "Speichern") {
+                        busy = true; error = ""
+                        Task {
+                            do { try await store.saveAccount(label: label, server: server, username: user, password: pass, index: index); dismiss() }
+                            catch { self.error = error.localizedDescription }
+                            busy = false
+                        }
+                    }.disabled(busy || server.isEmpty || user.isEmpty || (saved == nil && pass.isEmpty))
+                }
+            }
+            .onAppear {
+                if let sa = saved { label = sa.label; server = sa.account.server; user = sa.account.username }
             }
         }
     }

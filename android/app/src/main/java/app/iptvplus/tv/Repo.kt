@@ -3,15 +3,28 @@ package app.iptvplus.tv
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+
+/** Ein gespeichertes IPTV-Konto mit frei wählbarem Namen */
+data class SavedAccount(val label: String, val account: Account) {
+    fun toJson(): JSONObject = JSONObject().put("label", label).put("server", account.server).put("user", account.username).put("pass", account.password)
+    companion object {
+        fun from(o: JSONObject) = SavedAccount(o.optString("label"), Account(o.optString("server"), o.optString("user"), o.optString("pass")))
+    }
+}
 
 /** Zugangsdaten, Zwischenspeicher und TV-Programm */
 class Repo(private val ctx: Context) {
     private val prefs = ctx.getSharedPreferences("iptvplus", Context.MODE_PRIVATE)
 
-    var account: Account? = loadAccount()
+    var accounts: MutableList<SavedAccount> = loadAccounts()
         private set
+    var activeIndex: Int = prefs.getInt("activeIndex", 0).coerceIn(0, (accounts.size - 1).coerceAtLeast(0))
+        private set
+
+    val account: Account? get() = accounts.getOrNull(activeIndex)?.account
     var userInfo: JSONObject = JSONObject()
     var deOnly: Boolean
         get() = prefs.getBoolean("deOnly", true)
@@ -25,22 +38,73 @@ class Repo(private val ctx: Context) {
 
     val api: XtreamApi? get() = account?.let { XtreamApi(it) }
 
-    private fun loadAccount(): Account? {
-        val s = prefs.getString("server", null) ?: return null
-        return Account(s, prefs.getString("user", "") ?: "", prefs.getString("pass", "") ?: "")
+    private fun loadAccounts(): MutableList<SavedAccount> {
+        // mehrere Konten (neu)
+        val raw = prefs.getString("accounts", null)
+        if (raw != null) {
+            return try {
+                val a = JSONArray(raw)
+                (0 until a.length()).map { SavedAccount.from(a.getJSONObject(it)) }.toMutableList()
+            } catch (e: Exception) { mutableListOf() }
+        }
+        // einzelnes Konto aus älterer Version übernehmen
+        val s = prefs.getString("server", null)
+        return if (s != null) mutableListOf(SavedAccount("Konto 1", Account(s, prefs.getString("user", "") ?: "", prefs.getString("pass", "") ?: "")))
+        else mutableListOf()
+    }
+
+    private fun persistAccounts() {
+        val a = JSONArray()
+        for (sa in accounts) a.put(sa.toJson())
+        prefs.edit().putString("accounts", a.toString()).putInt("activeIndex", activeIndex)
+            .remove("server").remove("user").remove("pass").apply()
     }
 
     private fun epgFile() = File(ctx.cacheDir, "epg_cache.json")
 
-    suspend fun login(server: String, user: String, pass: String) = withContext(Dispatchers.IO) {
-        val pw = pass.trim().ifEmpty { account?.password ?: "" }
+    private fun resetCaches() { catCache.clear(); listCache.clear(); epg = null; epgFile().delete() }
+
+    /** Konto prüfen und speichern. index < 0 = neues Konto, sonst bestehendes ersetzen. */
+    suspend fun saveAccount(label: String, server: String, user: String, pass: String, index: Int): Int = withContext(Dispatchers.IO) {
+        val existing = accounts.getOrNull(index)?.account
+        val pw = pass.trim().ifEmpty { existing?.password ?: "" }
         val acc = Account(Account.normalize(server), user.trim(), pw)
         val info = XtreamApi(acc).userInfo()
-        val changed = acc != account
-        prefs.edit().putString("server", acc.server).putString("user", acc.username).putString("pass", acc.password).apply()
-        account = acc
-        userInfo = info
-        if (changed) { catCache.clear(); listCache.clear(); epg = null; epgFile().delete() }
+        val name = label.trim().ifEmpty { "Konto ${accounts.size + 1}" }
+        val sa = SavedAccount(name, acc)
+        val wasActive = index == activeIndex
+        val newIndex: Int
+        if (index in accounts.indices) {
+            accounts[index] = sa; newIndex = index
+        } else {
+            accounts.add(sa); newIndex = accounts.size - 1
+        }
+        if (accounts.size == 1 || wasActive || index < 0) {
+            activeIndex = newIndex
+            userInfo = info
+            resetCaches()
+        }
+        persistAccounts()
+        newIndex
+    }
+
+    /** Aktives Konto wechseln */
+    fun switchTo(index: Int) {
+        if (index !in accounts.indices || index == activeIndex) return
+        activeIndex = index
+        userInfo = JSONObject()
+        resetCaches()
+        persistAccounts()
+    }
+
+    /** Konto entfernen */
+    fun removeAccount(index: Int) {
+        if (index !in accounts.indices) return
+        accounts.removeAt(index)
+        activeIndex = activeIndex.coerceIn(0, (accounts.size - 1).coerceAtLeast(0))
+        userInfo = JSONObject()
+        resetCaches()
+        persistAccounts()
     }
 
     suspend fun refreshUserInfo() = withContext(Dispatchers.IO) {
@@ -48,8 +112,9 @@ class Repo(private val ctx: Context) {
     }
 
     fun logout() {
-        prefs.edit().remove("server").remove("user").remove("pass").apply()
-        account = null; userInfo = JSONObject(); catCache.clear(); listCache.clear(); epg = null; epgFile().delete()
+        accounts.clear(); activeIndex = 0
+        prefs.edit().clear().apply()
+        userInfo = JSONObject(); resetCaches()
     }
 
     fun filterDE(k: Kind) = deOnly && (k == Kind.MOVIE || k == Kind.SERIES)
