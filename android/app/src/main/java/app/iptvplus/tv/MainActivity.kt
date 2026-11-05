@@ -268,7 +268,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showItems(k: Kind, items: List<Item>, title: String) {
-        armedId = null
         currentItems = items
         header.text = "$title · ${items.size} Einträge"
         itemsAdapter.selected = -1
@@ -724,22 +723,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private var armedId: String? = null
-
-    /** Erster Klick auf einen Sender: nur auswählen, sonst nichts.
-     *  Zweiter Klick auf denselben Sender (oder Klick auf den laufenden): Vollbild öffnen. */
+    /** Erster Klick auf einen Sender: Live-Video im kleinen Fenster starten, Fokus bleibt in der Liste.
+     *  Zweiter Klick auf denselben (laufenden) Sender: Vollbild öffnen. */
     private fun pickLive(item: Item, title: String, list: List<Item>) {
         val alreadyPlaying = mode != Mode.NONE && playingKind == Kind.LIVE && playing?.id == item.id
-        if (armedId == item.id || alreadyPlaying) {
-            armedId = null
-            playing = item; playingKind = Kind.LIVE; playingTitle = title; zapList = list; errorCount = 0
+        if (alreadyPlaying) {
             setMode(Mode.FULL)
-            if (!alreadyPlaying) startStream()
             showInfo()
-        } else {
-            // erster Klick – nur merken, nichts weiter
-            armedId = item.id
+            return
         }
+        playing = item; playingKind = Kind.LIVE; playingTitle = title; zapList = list; errorCount = 0
+        setMode(Mode.MINI, announce = false)
+        startStream()
+        markPlaying(focus = false)
     }
 
     /** aktuell laufenden Sender in der Liste markieren (und optional auswählen) */
