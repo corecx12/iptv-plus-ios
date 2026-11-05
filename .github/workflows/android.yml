@@ -61,7 +61,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "firetv-${{ github.run_number }}" IPTVPlus-FireTV.apk \
-            --title "IPTV+ für Fire TV (Build ${{ github.run_number }})" \
+            --title "Build ${{ github.run_number }} - CoreCX" \
             --notes "APK für Fire TV Stick – per Downloader-App oder adb installieren. Gebaut von CoreCX."
 
       - uses: actions/upload-artifact@v4

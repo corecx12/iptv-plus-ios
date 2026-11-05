@@ -110,7 +110,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.logo).text = android.text.Html.fromHtml("IPTV<font color='#3D8BFD'>+</font>")
 
         // ausgewählte Zeile bleibt oben stehen – die Liste rückt bei jedem Schritt mit
-        catsAdapter = RowAdapter(false, { v -> keepNearTop(catsView, v) }) { pos, row -> onCategory(pos, row) }
+        catsAdapter = RowAdapter(false, { v -> keepNearTop(catsView, v) }) { pos, row -> onCategory(pos, row, moveFocus = true) }
         itemsAdapter = RowAdapter(true, { v -> keepNearTop(itemsView, v) }) { pos, row -> onItem(pos, row) }
         catsView.layoutManager = LinearLayoutManager(this)
         catsView.adapter = catsAdapter
@@ -235,11 +235,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun onCategory(pos: Int, row: Row) {
+    private fun onCategory(pos: Int, row: Row, moveFocus: Boolean = false) {
         if (section == Section.EPG) {
             epgTime = (row.payload as? String) ?: "now"
             catsAdapter.selected = pos; catsAdapter.notifyDataSetChanged()
             renderEpg()
+            if (moveFocus) focusFirstItem()
             return
         }
         val c = row.payload as? Category ?: return
@@ -253,10 +254,17 @@ class MainActivity : AppCompatActivity() {
             try {
                 val items = repo.items(k, c.id)
                 showItems(k, items, c.name)
+                // Kategorie gewählt -> direkt zum ersten Sender rechts springen (kein Vollbild)
+                if (moveFocus) focusFirstItem()
             } catch (e: Exception) {
                 header.text = "Fehler: ${e.message}"
             }
         }
+    }
+
+    /** Fokus auf den ersten Sender in der rechten Liste setzen */
+    private fun focusFirstItem() {
+        itemsView.post { itemsView.findViewHolderForAdapterPosition(0)?.itemView?.requestFocus() ?: itemsView.getChildAt(0)?.requestFocus() }
     }
 
     private fun showItems(k: Kind, items: List<Item>, title: String) {
@@ -629,15 +637,15 @@ class MainActivity : AppCompatActivity() {
                 when {
                     r == null -> info.text = "Installierte Version: ${Updater.versionName(this@MainActivity)} – kein Release gefunden."
                     r.number > cur -> {
-                        info.text = "Update verfügbar: Build ${r.number} (installiert: ${Updater.versionName(this@MainActivity)})"
+                        info.text = "Update verfügbar: Build ${r.number} - CoreCX (installiert: ${Updater.versionName(this@MainActivity)})"
                         AlertDialog.Builder(this@MainActivity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                             .setTitle("Update verfügbar")
-                            .setMessage("Build ${r.number} ist verfügbar.\nJetzt herunterladen und installieren?")
+                            .setMessage("Build ${r.number} - CoreCX ist verfügbar.\nJetzt herunterladen und installieren?")
                             .setPositiveButton("Installieren") { _, _ -> runUpdate(info, r) }
                             .setNegativeButton("Später", null)
                             .show()
                     }
-                    else -> info.text = "Du hast die neueste Version (Build $cur)."
+                    else -> info.text = "Du hast die neueste Version (Build $cur - CoreCX)."
                 }
             } catch (e: Exception) {
                 info.text = "Update-Prüfung fehlgeschlagen: ${e.message}"
@@ -653,9 +661,9 @@ class MainActivity : AppCompatActivity() {
         updating = true
         lifecycleScope.launch {
             try {
-                info.text = "Lade Build ${r.number}… 0 %"
-                val apk = Updater.download(this@MainActivity, r) { p -> info.text = "Lade Build ${r.number}… $p %" }
-                info.text = "Build ${r.number} geladen – Installation wird gestartet…"
+                info.text = "Lade Build ${r.number} - CoreCX… 0 %"
+                val apk = Updater.download(this@MainActivity, r) { p -> info.text = "Lade Build ${r.number} - CoreCX… $p %" }
+                info.text = "Build ${r.number} - CoreCX geladen – Installation wird gestartet…"
                 if (!Updater.install(this@MainActivity, apk)) {
                     info.text = "Bitte „Apps unbekannter Herkunft“ für IPTV+ erlauben, dann „Nach Update suchen“ erneut."
                 }
