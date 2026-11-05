@@ -27,6 +27,7 @@ data class Row(
 
 class RowAdapter(
     private val showIcons: Boolean,
+    private val onFocus: ((View) -> Unit)? = null,
     private val onClick: (Int, Row) -> Unit
 ) : RecyclerView.Adapter<RowAdapter.VH>() {
 
@@ -107,5 +108,6 @@ class RowAdapter(
         }
         h.root.isSelected = position == selected
         h.root.setOnClickListener { onClick(h.bindingAdapterPosition, r) }
+        h.root.setOnFocusChangeListener { v, has -> if (has) onFocus?.invoke(v) }
     }
 }

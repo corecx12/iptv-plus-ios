@@ -109,8 +109,9 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.logo).text = android.text.Html.fromHtml("IPTV<font color='#3D8BFD'>+</font>")
 
-        catsAdapter = RowAdapter(false) { pos, row -> onCategory(pos, row) }
-        itemsAdapter = RowAdapter(true) { pos, row -> onItem(pos, row) }
+        // ausgewählte Zeile bleibt oben stehen – die Liste rückt bei jedem Schritt mit
+        catsAdapter = RowAdapter(false, { v -> keepNearTop(catsView, v) }) { pos, row -> onCategory(pos, row) }
+        itemsAdapter = RowAdapter(true, { v -> keepNearTop(itemsView, v) }) { pos, row -> onItem(pos, row) }
         catsView.layoutManager = LinearLayoutManager(this)
         catsView.adapter = catsAdapter
         itemsView.layoutManager = LinearLayoutManager(this)
@@ -200,6 +201,15 @@ class MainActivity : AppCompatActivity() {
             Section.EPG -> showEpgSection()
             else -> loadCategories(kindOf(s))
         }
+    }
+
+    /** Liste so verschieben, dass die fokussierte Zeile als zweite Zeile oben steht */
+    private fun keepNearTop(rv: RecyclerView, v: View) {
+        val first = rv.getChildAt(0) ?: return
+        val rowH = (first.height).coerceAtLeast(dp(40))
+        val target = rowH  // eine Zeile Abstand nach oben, damit man sieht, was davor kommt
+        val dy = v.top - target
+        if (dy != 0) rv.smoothScrollBy(0, dy)
     }
 
     private fun kindOf(s: Section) = when (s) { Section.MOVIE -> Kind.MOVIE; Section.SERIES -> Kind.SERIES; else -> Kind.LIVE }
@@ -652,7 +662,7 @@ class MainActivity : AppCompatActivity() {
         itemsAdapter.selected = idx
         itemsAdapter.notifyDataSetChanged()
         if (idx < 0 || !focus) return
-        (itemsView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(idx, dp(120))
+        (itemsView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(idx, dp(60))
         itemsView.post { itemsView.post { itemsView.findViewHolderForAdapterPosition(idx)?.itemView?.requestFocus() } }
     }
 
@@ -689,8 +699,9 @@ class MainActivity : AppCompatActivity() {
                 playerBox.requestFocus()
             }
             Mode.MINI -> {
-                lp.width = dp(400); lp.height = dp(225)
-                lp.gravity = Gravity.BOTTOM or Gravity.END; lp.setMargins(0, 0, dp(24), dp(24))
+                // kleines Bild unten rechts – die Liste rückt nach oben, daher wird nichts verdeckt
+                lp.width = dp(256); lp.height = dp(144)
+                lp.gravity = Gravity.BOTTOM or Gravity.END; lp.setMargins(0, 0, dp(16), dp(16))
                 playerBox.visibility = View.VISIBLE
                 playerBox.isFocusable = false
                 infoOverlay.visibility = View.GONE
