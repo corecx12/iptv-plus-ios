@@ -29,7 +29,12 @@ jobs:
 
       - name: APK bauen
         working-directory: android
-        run: gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log; test ${PIPESTATUS[0]} -eq 0 || { grep -E "^e: |error:|FAILURE|What went wrong" -A3 build.log | head -80; exit 1; }
+        run: |
+          set +e
+          gradle assembleRelease --no-daemon --stacktrace > build.log 2>&1
+          rc=$?
+          tail -5 build.log
+          if [ $rc -ne 0 ]; then grep -E "^e: |error:|FAILURE|What went wrong" -A3 build.log | head -80; exit 1; fi
 
       - name: APK umbenennen
         run: |
