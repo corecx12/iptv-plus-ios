@@ -158,10 +158,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun buildNav() {
-        val full = navButton("▶  Vollbild") { setMode(Mode.FULL) }
-        val stop = navButton("■  Stopp") { stopPlayer() }
-        miniButtons = listOf(full, stop)
-        for (b in miniButtons) { b.setTextColor(Color.parseColor("#3D8BFD")); b.visibility = View.GONE; nav.addView(b) }
+        miniButtons = emptyList()
         val items = listOf(
             Section.LIVE to "📺  Live TV", Section.MOVIE to "🎬  Filme", Section.SERIES to "🎞  Serien",
             Section.EPG to "📋  TV-Programm", Section.SETTINGS to "⚙  Einstellungen"
@@ -744,8 +741,11 @@ class MainActivity : AppCompatActivity() {
         val idx = itemsAdapter.rows.indexOfFirst { r ->
             when (val p = r.payload) { is Item -> p.id == id; is EpgChannel -> p.streamId == id; else -> false }
         }
+        val old = itemsAdapter.selected
         itemsAdapter.selected = idx
-        itemsAdapter.notifyDataSetChanged()
+        // nur die betroffenen Zeilen neu zeichnen, damit der Fokus auf dem gewählten Sender bleibt
+        if (old >= 0 && old < itemsAdapter.rows.size) itemsAdapter.notifyItemChanged(old)
+        if (idx >= 0) itemsAdapter.notifyItemChanged(idx)
         if (idx < 0 || !focus) return
         (itemsView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(idx, dp(60))
         itemsView.post { itemsView.post { itemsView.findViewHolderForAdapterPosition(idx)?.itemView?.requestFocus() } }
@@ -790,11 +790,8 @@ class MainActivity : AppCompatActivity() {
                 playerBox.visibility = View.VISIBLE
                 playerBox.isFocusable = false
                 infoOverlay.visibility = View.GONE
-                if (announce && fromFull) Toast.makeText(this, "Bild verkleinert – Sender nochmal anklicken oder Play-Taste = Vollbild, Zurück = beenden", Toast.LENGTH_LONG).show()
-                if (fromFull) {
-                    if (itemsView.visibility == View.VISIBLE && itemsAdapter.rows.isNotEmpty()) markPlaying(focus = true)
-                    else miniButtons[0].requestFocus()
-                }
+                if (announce && fromFull) Toast.makeText(this, "Bild verkleinert – Sender nochmal anklicken = Vollbild, Zurück = beenden", Toast.LENGTH_LONG).show()
+                if (fromFull && itemsView.visibility == View.VISIBLE && itemsAdapter.rows.isNotEmpty()) markPlaying(focus = true)
             }
         }
         playerBox.layoutParams = lp
