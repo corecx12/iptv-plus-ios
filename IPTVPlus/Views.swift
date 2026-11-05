@@ -12,16 +12,22 @@ struct IPTVPlusApp: App {
 
 struct RootView: View {
     @EnvironmentObject var store: Store
+    @ObservedObject var host = PlayerHost.shared
     var body: some View {
         if store.account == nil {
             LoginView()
         } else {
-            TabView {
-                BrowseRoot(kind: .live).tabItem { Label("Live TV", systemImage: "tv") }
-                BrowseRoot(kind: .movie).tabItem { Label("Filme", systemImage: "film") }
-                BrowseRoot(kind: .series).tabItem { Label("Serien", systemImage: "rectangle.stack") }
-                EPGView().tabItem { Label("TV-Programm", systemImage: "list.bullet.rectangle") }
-                SettingsView().tabItem { Label("Einstellungen", systemImage: "gearshape") }
+            ZStack {
+                TabView {
+                    BrowseRoot(kind: .live).tabItem { Label("Live TV", systemImage: "tv") }
+                    BrowseRoot(kind: .movie).tabItem { Label("Filme", systemImage: "film") }
+                    BrowseRoot(kind: .series).tabItem { Label("Serien", systemImage: "rectangle.stack") }
+                    EPGView().tabItem { Label("TV-Programm", systemImage: "list.bullet.rectangle") }
+                    SettingsView().tabItem { Label("Einstellungen", systemImage: "gearshape") }
+                }
+                if host.request != nil {
+                    PlayerOverlay().transition(.move(edge: .bottom))
+                }
             }
             .task { store.loadEPG(force: false); await store.refreshUserInfo() }
         }
@@ -45,7 +51,7 @@ struct LoginView: View {
                     TextField("Server-URL (http://anbieter:8080)", text: $server)
                         .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
                     TextField("Benutzername", text: $user).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    SecureField("Passwort", text: $pass)
+                    SecureField("Passwort", text: $pass).textInputAutocapitalization(.never).autocorrectionDisabled().textContentType(.password)
                 } header: { Text("Xtream-Codes-Zugangsdaten") }
                 if !error.isEmpty { Text(error).foregroundColor(.red).font(.footnote) }
                 Button {
@@ -119,7 +125,7 @@ struct CategoryListView: View {
             do { cats = try await store.categories(kind); error = "" } catch { self.error = error.localizedDescription }
         }
         .refreshable { cats = (try? await store.categories(kind)) ?? cats }
-        .fullScreenCover(item: $play) { PlayerScreen(request: $0) }
+        .onChange(of: play?.id) { _ in if let p = play { PlayerHost.shared.open(p); play = nil } }
     }
 }
 
@@ -153,7 +159,7 @@ struct ItemListView: View {
             catch { self.error = error.localizedDescription }
             loading = false
         }
-        .fullScreenCover(item: $play) { PlayerScreen(request: $0) }
+        .onChange(of: play?.id) { _ in if let p = play { PlayerHost.shared.open(p); play = nil } }
     }
 }
 
@@ -247,7 +253,7 @@ struct MovieDetailView: View {
             plot = str(info["plot"]).isEmpty ? str(info["description"]) : str(info["plot"])
             meta = [str(info["genre"]), str(info["duration"]), String(str(info["releasedate"]).prefix(4))].filter { !$0.isEmpty }.joined(separator: " · ")
         }
-        .fullScreenCover(item: $play) { PlayerScreen(request: $0) }
+        .onChange(of: play?.id) { _ in if let p = play { PlayerHost.shared.open(p); play = nil } }
     }
 }
 
@@ -332,7 +338,7 @@ struct SeriesDetailView: View {
             season = seasons.first ?? ""
             loading = false
         }
-        .fullScreenCover(item: $play) { PlayerScreen(request: $0) }
+        .onChange(of: play?.id) { _ in if let p = play { PlayerHost.shared.open(p); play = nil } }
     }
 }
 
@@ -407,7 +413,7 @@ struct EPGView: View {
             .searchable(text: $query, prompt: "Sender oder Sendung")
             .refreshable { store.loadEPG(force: true) }
             .onReceive(clock) { tick = $0 }
-            .fullScreenCover(item: $play) { PlayerScreen(request: $0) }
+            .onChange(of: play?.id) { _ in if let p = play { PlayerHost.shared.open(p); play = nil } }
         }
     }
 }
@@ -467,7 +473,7 @@ struct SettingsView: View {
                 Section("Anmeldung / Zugangsdaten") {
                     TextField("Server-URL", text: $server).keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
                     TextField("Benutzername", text: $user).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    SecureField("Passwort (leer = unverändert)", text: $pass)
+                    SecureField("Passwort (leer = unverändert)", text: $pass).textInputAutocapitalization(.never).autocorrectionDisabled().textContentType(.password)
                     if !msg.isEmpty { Text(msg).font(.footnote).foregroundColor(msg.hasPrefix("✓") ? .green : .red) }
                     Button(busy ? "Verbinde…" : "Speichern & verbinden") {
                         busy = true; msg = ""
@@ -509,7 +515,7 @@ struct SettingsView: View {
                 user = store.account?.username ?? ""
             }
             .confirmationDialog("Abmelden und Zugangsdaten löschen?", isPresented: $confirmLogout, titleVisibility: .visible) {
-                Button("Abmelden", role: .destructive) { store.logout() }
+                Button("Abmelden", role: .destructive) { PlayerHost.shared.close(); store.logout() }
             }
         }
     }
