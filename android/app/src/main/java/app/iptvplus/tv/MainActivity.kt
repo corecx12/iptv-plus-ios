@@ -715,14 +715,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** Sender in der Liste gewählt: läuft er schon -> Vollbild, sonst im Mini-Bild starten und in der Liste bleiben */
+    /** Sender in der Liste gewählt: nur das Vorschaubild rechts umschalten, Fokus bleibt in der Liste.
+     *  Vollbild gibt es getrennt über „▶ Vollbild“ links oder die Play-Taste. */
     private fun pickLive(item: Item, title: String, list: List<Item>) {
-        if (mode != Mode.NONE && playingKind == Kind.LIVE && playing?.id == item.id) {
-            setMode(Mode.FULL); showInfo(); return
-        }
+        val same = mode != Mode.NONE && playingKind == Kind.LIVE && playing?.id == item.id
         playing = item; playingKind = Kind.LIVE; playingTitle = title; zapList = list; errorCount = 0
-        setMode(Mode.MINI, announce = false)
-        startStream()
+        if (mode != Mode.MINI) setMode(Mode.MINI, announce = false)
+        if (!same) startStream()
         markPlaying(focus = false)
     }
 
