@@ -4,3 +4,4 @@ Pods/
 build/
 Payload/
 *.ipa
+android/app/*.keystore

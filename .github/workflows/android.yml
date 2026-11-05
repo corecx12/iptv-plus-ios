@@ -27,8 +27,16 @@ jobs:
         with:
           gradle-version: '8.10.2'
 
+      - name: Signierschlüssel aus Geheimnis
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+
       - name: APK bauen
         working-directory: android
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           set +e
           gradle assembleRelease --no-daemon --stacktrace > build.log 2>&1

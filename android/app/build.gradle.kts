@@ -18,10 +18,11 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("release.keystore")
-            storePassword = "iptvplus"
+            // Schlüssel kommt aus dem GitHub-Geheimnis (nicht im Projekt gespeichert)
+            storeFile = file(System.getenv("KEYSTORE_FILE") ?: "release.keystore")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
             keyAlias = "iptvplus"
-            keyPassword = "iptvplus"
+            keyPassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
         }
     }
 

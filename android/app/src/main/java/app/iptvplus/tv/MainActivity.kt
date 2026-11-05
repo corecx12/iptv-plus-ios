@@ -252,8 +252,10 @@ class MainActivity : AppCompatActivity() {
     private fun showItems(k: Kind, items: List<Item>, title: String) {
         currentItems = items
         header.text = "$title · ${items.size} Einträge"
+        itemsAdapter.selected = -1
         itemsAdapter.submit(items.map { rowFor(k, it) })
         itemsView.scrollToPosition(0)
+        markPlaying(focus = false)
     }
 
     private fun rowFor(k: Kind, it: Item): Row {
@@ -282,7 +284,7 @@ class MainActivity : AppCompatActivity() {
     private fun onItem(pos: Int, row: Row) {
         when (val p = row.payload) {
             is Item -> when (section) {
-                Section.LIVE -> play(Kind.LIVE, p, p.name, currentItems)
+                Section.LIVE -> pickLive(p, p.name, currentItems)
                 Section.MOVIE -> showMovie(p)
                 Section.SERIES -> openSeries(p)
                 else -> {}
@@ -290,7 +292,7 @@ class MainActivity : AppCompatActivity() {
             is EpgChannel -> {
                 val it = Item(p.streamId, p.name, p.icon, "", "ts", p.num, "", "", "")
                 val list = (repo.epg?.channels ?: emptyList()).map { c -> Item(c.streamId, c.name, c.icon, "", "ts", c.num, "", "", "") }
-                play(Kind.LIVE, it, p.name, list)
+                pickLive(it, p.name, list)
             }
             is Episode -> {
                 val it = Item(p.id, p.title, "", "", p.ext, 0, "", "", "")
@@ -443,6 +445,7 @@ class MainActivity : AppCompatActivity() {
         }
         header.text = "${rows.size} deutsche Sender · Quelle: ${e.source}"
         itemsAdapter.submit(rows)
+        markPlaying(focus = false)
     }
 
     private fun loadEpg(force: Boolean) {
@@ -535,8 +538,50 @@ class MainActivity : AppCompatActivity() {
                     .setNegativeButton("Abbrechen", null).show()
             })
         }
+        // ---- Update ----
+        box.addView(label("UPDATE"))
+        val upInfo = label("Installierte Version: ${Updater.versionName(this)} – suche nach Updates…", 15f, "#E8EAEE", 0)
+        box.addView(upInfo)
+        box.addView(button("Neueste Version herunterladen & installieren") { runUpdate(upInfo) })
+        lifecycleScope.launch {
+            try {
+                val r = Updater.latest()
+                val cur = Updater.currentVersion(this@MainActivity)
+                upInfo.text = when {
+                    r == null -> "Installierte Version: ${Updater.versionName(this@MainActivity)} – kein Update gefunden."
+                    r.number > cur -> "Installierte Version: ${Updater.versionName(this@MainActivity)} – NEU verfügbar: Build ${r.number}"
+                    else -> "Installierte Version: ${Updater.versionName(this@MainActivity)} – aktuell (neuestes Release: Build ${r.number})"
+                }
+            } catch (e: Exception) {
+                upInfo.text = "Installierte Version: ${Updater.versionName(this@MainActivity)} – Update-Prüfung fehlgeschlagen: ${e.message}"
+            }
+        }
         box.addView(label("IPTV+ für Fire TV\nGebaut von CoreCX", 13f, "#8B93A1", 28))
         (if (acc == null) fServer else box.getChildAt(0)).post { (if (acc == null) fServer else navButtons[Section.SETTINGS])?.requestFocus() }
+    }
+
+    private var updating = false
+
+    /** lädt immer das neueste Release herunter und startet die Installation (auch zum Neu-Installieren) */
+    private fun runUpdate(info: TextView) {
+        if (updating) return
+        updating = true
+        lifecycleScope.launch {
+            try {
+                info.text = "Suche neueste Version…"
+                val r = Updater.latest() ?: throw ApiException("Kein Release gefunden")
+                info.text = "Lade Build ${r.number}… 0 %"
+                val apk = Updater.download(this@MainActivity, r) { p -> info.text = "Lade Build ${r.number}… $p %" }
+                info.text = "Build ${r.number} geladen – Installation wird gestartet…"
+                if (!Updater.install(this@MainActivity, apk)) {
+                    info.text = "Bitte „Apps unbekannter Herkunft“ für IPTV+ erlauben, dann zurück und den Update-Knopf erneut drücken."
+                }
+            } catch (e: Exception) {
+                info.text = "Update fehlgeschlagen: ${e.message}"
+            } finally {
+                updating = false
+            }
+        }
     }
 
     // ---------------- Player ----------------
@@ -587,6 +632,30 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Sender in der Liste gewählt: läuft er schon -> Vollbild, sonst im Mini-Bild starten und in der Liste bleiben */
+    private fun pickLive(item: Item, title: String, list: List<Item>) {
+        if (mode != Mode.NONE && playingKind == Kind.LIVE && playing?.id == item.id) {
+            setMode(Mode.FULL); showInfo(); return
+        }
+        playing = item; playingKind = Kind.LIVE; playingTitle = title; zapList = list; errorCount = 0
+        setMode(Mode.MINI, announce = false)
+        startStream()
+        markPlaying(focus = false)
+    }
+
+    /** aktuell laufenden Sender in der Liste markieren (und optional auswählen) */
+    private fun markPlaying(focus: Boolean) {
+        val id = playing?.id ?: return
+        val idx = itemsAdapter.rows.indexOfFirst { r ->
+            when (val p = r.payload) { is Item -> p.id == id; is EpgChannel -> p.streamId == id; else -> false }
+        }
+        itemsAdapter.selected = idx
+        itemsAdapter.notifyDataSetChanged()
+        if (idx < 0 || !focus) return
+        (itemsView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(idx, dp(120))
+        itemsView.post { itemsView.post { itemsView.findViewHolderForAdapterPosition(idx)?.itemView?.requestFocus() } }
+    }
+
     private fun play(k: Kind, item: Item, title: String, list: List<Item>) {
         playing = item; playingKind = k; playingTitle = title; zapList = list; errorCount = 0
         setMode(Mode.FULL)
@@ -603,9 +672,11 @@ class MainActivity : AppCompatActivity() {
         playing = zapList[j]; playingTitle = zapList[j].name; errorCount = 0
         startStream()
         showInfo()
+        markPlaying(focus = false)
     }
 
-    private fun setMode(m: Mode) {
+    private fun setMode(m: Mode, announce: Boolean = true) {
+        val fromFull = mode == Mode.FULL
         mode = m
         val lp = playerBox.layoutParams as FrameLayout.LayoutParams
         when (m) {
@@ -623,8 +694,11 @@ class MainActivity : AppCompatActivity() {
                 playerBox.visibility = View.VISIBLE
                 playerBox.isFocusable = false
                 infoOverlay.visibility = View.GONE
-                Toast.makeText(this, "Bild verkleinert – weitersuchen möglich. Play-Taste oder „▶ Vollbild“ = groß, Zurück = beenden", Toast.LENGTH_LONG).show()
-                (if (itemsView.visibility == View.VISIBLE) itemsView.getChildAt(0) else null)?.requestFocus() ?: miniButtons[0].requestFocus()
+                if (announce && fromFull) Toast.makeText(this, "Bild verkleinert – Sender nochmal anklicken oder Play-Taste = Vollbild, Zurück = beenden", Toast.LENGTH_LONG).show()
+                if (fromFull) {
+                    if (itemsView.visibility == View.VISIBLE && itemsAdapter.rows.isNotEmpty()) markPlaying(focus = true)
+                    else miniButtons[0].requestFocus()
+                }
             }
         }
         playerBox.layoutParams = lp
