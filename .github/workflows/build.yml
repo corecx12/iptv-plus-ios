@@ -1,0 +1,58 @@
+name: IPA bauen
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Neueste Xcode-Version wählen
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Werkzeuge installieren
+        run: |
+          brew install xcodegen || true
+          gem list cocoapods -i || sudo gem install cocoapods
+          xcodebuild -version
+
+      - name: Projekt erzeugen
+        run: |
+          xcodegen generate
+          pod install --repo-update
+
+      - name: App bauen (unsigniert)
+        run: |
+          set -o pipefail
+          xcodebuild -workspace IPTVPlus.xcworkspace -scheme IPTVPlus -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -archivePath "$PWD/build/IPTVPlus.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            archive 2>&1 | tee build.log | grep -E "error:|\*\* ARCHIVE" || true
+          test -d "build/IPTVPlus.xcarchive/Products/Applications/IPTVPlus.app" || { grep -E "error:" build.log | head -50; exit 1; }
+
+      - name: IPA packen
+        run: |
+          mkdir -p Payload
+          cp -R build/IPTVPlus.xcarchive/Products/Applications/IPTVPlus.app Payload/
+          zip -qry IPTVPlus.ipa Payload
+          ls -la IPTVPlus.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPTVPlus-ipa
+          path: IPTVPlus.ipa
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore

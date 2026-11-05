@@ -1,0 +1,50 @@
+name: IPTVPlus
+options:
+  bundleIdPrefix: app.iptvplus
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  IPTVPlus:
+    type: application
+    platform: iOS
+    sources:
+      - path: IPTVPlus
+        excludes:
+          - Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.iptvplus.player
+        PRODUCT_NAME: IPTVPlus
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_BITCODE: NO
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGN_IDENTITY: ""
+        INFOPLIST_FILE: IPTVPlus/Info.plist
+    info:
+      path: IPTVPlus/Info.plist
+      properties:
+        CFBundleDisplayName: IPTV+
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UIBackgroundModes: [audio]
+        UIRequiresFullScreen: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+        NSLocalNetworkUsageDescription: IPTV+ verbindet sich mit deinem IPTV-Server.
+        ITSAppUsesNonExemptEncryption: false
