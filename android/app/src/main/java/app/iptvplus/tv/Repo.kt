@@ -35,6 +35,7 @@ class Repo(private val ctx: Context) {
 
     private val catCache = HashMap<Kind, List<Category>>()
     private val listCache = HashMap<String, List<Item>>()
+    private val infoCache = HashMap<String, JSONObject>()
 
     val api: XtreamApi? get() = account?.let { XtreamApi(it) }
 
@@ -62,7 +63,22 @@ class Repo(private val ctx: Context) {
 
     private fun epgFile() = File(ctx.cacheDir, "epg_cache.json")
 
-    private fun resetCaches() { catCache.clear(); listCache.clear(); epg = null; epgFile().delete() }
+    private fun resetCaches() { catCache.clear(); listCache.clear(); infoCache.clear(); epg = null; epgFile().delete() }
+
+    /** Kennung des aktiven Kontos (für „Weiterschauen“ pro Konto) */
+    val accountKey: String get() = account?.let { it.server + "|" + it.username } ?: ""
+
+    /** Details zu Film oder Serie (Beschreibung, Hintergrundbild, Folgen), zwischengespeichert */
+    suspend fun info(k: Kind, id: String): JSONObject = withContext(Dispatchers.IO) {
+        val key = "${k.path}:$id"
+        infoCache[key] ?: run {
+            val a = api ?: return@withContext JSONObject()
+            val o = if (k == Kind.SERIES) a.info("get_series_info", "series_id", id) else a.info("get_vod_info", "vod_id", id)
+            if (infoCache.size > 300) infoCache.clear()
+            infoCache[key] = o
+            o
+        }
+    }
 
     /** Konto prüfen und speichern. index < 0 = neues Konto, sonst bestehendes ersetzen. */
     suspend fun saveAccount(label: String, server: String, user: String, pass: String, index: Int): Int = withContext(Dispatchers.IO) {

@@ -39,7 +39,8 @@ data class Category(val id: String, val name: String)
 
 data class Item(
     val id: String, val name: String, val icon: String, val categoryId: String,
-    val ext: String, val num: Int, val epgId: String, val year: String, val rating: String
+    val ext: String, val num: Int, val epgId: String, val year: String, val rating: String,
+    val added: Long = 0
 ) {
     companion object {
         fun from(o: JSONObject, k: Kind): Item {
@@ -53,7 +54,8 @@ data class Item(
                 num = o.s("num").toIntOrNull() ?: 0,
                 epgId = o.s("epg_channel_id").lowercase().trim(),
                 year = if (y.isNotEmpty()) y else o.s("releaseDate").take(4),
-                rating = o.s("rating")
+                rating = o.s("rating"),
+                added = o.s("added").toLongOrNull() ?: o.s("last_modified").toLongOrNull() ?: 0L
             )
         }
     }

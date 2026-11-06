@@ -1,6 +1,5 @@
 package app.iptvplus.tv
 
-import android.graphics.Typeface
 import android.text.TextUtils
 import android.util.TypedValue
 import android.view.Gravity
@@ -63,7 +62,9 @@ class RowAdapter(
     private fun text(parent: ViewGroup, size: Float, color: Int, medium: Boolean = false) = TextView(parent.context).apply {
         setTextSize(TypedValue.COMPLEX_UNIT_SP, size)
         setTextColor(ContextCompat.getColorStateList(parent.context, color))
-        if (medium) typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        typeface = if (medium) Ui.semibold else Ui.regular
+        letterSpacing = if (size >= 16f) -0.01f else -0.004f
+        includeFontPadding = false
         maxLines = 1
         ellipsize = TextUtils.TruncateAt.END
         isDuplicateParentStateEnabled = true
