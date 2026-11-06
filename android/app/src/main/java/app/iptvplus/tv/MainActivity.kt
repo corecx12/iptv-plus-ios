@@ -2,6 +2,7 @@ package app.iptvplus.tv
 
 import android.app.AlertDialog
 import android.graphics.Color
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -16,17 +17,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
-import android.widget.Button
-import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Job
@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity() {
         playerMsg = findViewById(R.id.playerMsg)
         infoOverlay = findViewById(R.id.infoOverlay)
 
-        findViewById<TextView>(R.id.logo).text = android.text.Html.fromHtml("IPTV<font color='#3D8BFD'>+</font>")
+        findViewById<TextView>(R.id.logo).text = android.text.Html.fromHtml("IPTV<font color='#0A84FF'>+</font>")
 
         // ausgewählte Zeile bleibt oben stehen – die Liste rückt bei jedem Schritt mit
         catsAdapter = RowAdapter(false, { v -> keepNearTop(catsView, v) }) { pos, row -> onCategory(pos, row, moveFocus = true) }
@@ -120,6 +120,10 @@ class MainActivity : AppCompatActivity() {
 
         buildNav()
         setupSearch()
+        findViewById<View>(R.id.root).viewTreeObserver.addOnGlobalFocusChangeListener { old, new ->
+            val tabs = navButtons.values
+            navEnteredFromOutside = tabs.any { it === new } && tabs.none { it === old }
+        }
 
         if (repo.account == null) {
             showSection(Section.SETTINGS)
@@ -145,43 +149,91 @@ class MainActivity : AppCompatActivity() {
 
     // ---------------- Navigation ----------------
 
+    private val medium: Typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+    private fun col(id: Int) = ContextCompat.getColor(this, id)
+
+    /** Reiter in der Leiste oben (Apple-TV-Stil: nur Text, Kapsel) */
     private fun navButton(label: String, onClick: () -> Unit) = TextView(this).apply {
         text = label
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
-        setTextColor(Color.parseColor("#E8EAEE"))
-        setPadding(dp(14), dp(11), dp(14), dp(11))
+        typeface = medium
+        setTextColor(ContextCompat.getColorStateList(this@MainActivity, R.color.tab_text))
+        setPadding(dp(22), dp(9), dp(22), dp(9))
         isFocusable = true
         isClickable = true
-        setBackgroundResource(R.drawable.focus_bg)
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(4) }
+        setBackgroundResource(R.drawable.tab_bg)
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginEnd = dp(2) }
         setOnClickListener { onClick() }
+        setOnFocusChangeListener { v, has ->
+            v.focusLift(has, 1.06f)
+            if (has) {
+                val cur = navButtons[section]
+                if (navEnteredFromOutside && cur != null && cur !== v) {
+                    // von unten in die Leiste: immer auf dem aktuellen Reiter landen
+                    cur.requestFocus()
+                } else {
+                    // Apple TV: Reiter wechselt schon beim Darüberfahren
+                    val s = navButtons.entries.firstOrNull { it.value === v }?.key as? Section
+                    if (s != null && s != section) showSection(s, keepFocus = true)
+                }
+            }
+        }
     }
 
     private fun buildNav() {
         miniButtons = emptyList()
         val items = listOf(
-            Section.LIVE to "📺  Live TV", Section.MOVIE to "🎬  Filme", Section.SERIES to "🎞  Serien",
-            Section.EPG to "📋  TV-Programm", Section.SETTINGS to "⚙  Einstellungen"
+            Section.LIVE to "Live TV", Section.MOVIE to "Filme", Section.SERIES to "Serien",
+            Section.EPG to "TV-Programm", Section.SETTINGS to "Einstellungen"
         )
         for ((s, label) in items) {
             val b = navButton(label) { showSection(s) }
             navButtons[s] = b
             nav.addView(b)
         }
-        val credit = TextView(this).apply {
-            text = "by CoreCX"
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
-            setTextColor(Color.parseColor("#8B93A1"))
-            setPadding(dp(14), dp(20), dp(14), 0)
+    }
+
+    /** Kurzer Hinweis oben in der Mitte (statt Android-Toast) */
+    private val hideBanner = Runnable {
+        val b = findViewById<TextView>(R.id.banner)
+        b.animate().alpha(0f).setDuration(200).withEndAction { b.visibility = View.GONE }.start()
+    }
+
+    private fun showBanner(msg: String, long: Boolean) {
+        val b = findViewById<TextView>(R.id.banner)
+        b.text = msg
+        ui.removeCallbacks(hideBanner)
+        if (b.visibility != View.VISIBLE) { b.alpha = 0f; b.visibility = View.VISIBLE }
+        b.animate().alpha(1f).setDuration(200).start()
+        ui.postDelayed(hideBanner, if (long) 4500L else 2500L)
+    }
+
+    /** Filme/Serien als Poster-Raster, alles andere als Liste */
+    private fun submitItems(rows: List<Row>) {
+        val grid = rows.isNotEmpty() && rows.all { it.poster }
+        val lm = itemsView.layoutManager
+        if (grid) {
+            val w = itemsView.width.takeIf { it > 0 } ?: (resources.displayMetrics.widthPixels - dp(96) - dp(250))
+            val span = (w / dp(132)).coerceIn(3, 7)
+            val cell = w / span
+            itemsAdapter.posterHeight = ((cell - dp(16)) * 1.5f).toInt()
+            if (lm !is GridLayoutManager) itemsView.layoutManager = GridLayoutManager(this, span)
+            else if (lm.spanCount != span) lm.spanCount = span
+        } else if (rows.isNotEmpty() && lm is GridLayoutManager) {
+            itemsView.layoutManager = LinearLayoutManager(this)
         }
-        nav.addView(credit)
+        itemsAdapter.submit(rows)
     }
 
     private fun highlightNav() {
         for ((k, v) in navButtons) v.isSelected = k == section
     }
 
-    private fun showSection(s: Section) {
+    private var keepNavFocus = false
+    private var navEnteredFromOutside = false
+
+    private fun showSection(s: Section, keepFocus: Boolean = false) {
+        keepNavFocus = keepFocus
         section = s
         seriesOpen = null
         highlightNav()
@@ -204,7 +256,8 @@ class MainActivity : AppCompatActivity() {
     private fun keepNearTop(rv: RecyclerView, v: View) {
         val first = rv.getChildAt(0) ?: return
         val rowH = (first.height).coerceAtLeast(dp(40))
-        val target = rowH  // eine Zeile Abstand nach oben, damit man sieht, was davor kommt
+        // Liste: eine Zeile Abstand nach oben, damit man sieht, was davor kommt; Poster-Raster: Reihe oben
+        val target = if (rv.layoutManager is GridLayoutManager) dp(6) else rowH
         val dy = v.top - target
         if (dy != 0) rv.smoothScrollBy(0, dy)
     }
@@ -215,7 +268,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadCategories(k: Kind) {
         catsAdapter.submit(listOf(Row("Lade…")))
-        itemsAdapter.submit(emptyList())
+        submitItems(emptyList())
         header.text = ""
         loadJob = lifecycleScope.launch {
             try {
@@ -225,7 +278,7 @@ class MainActivity : AppCompatActivity() {
                 cats = list
                 catsAdapter.submit(list.map { Row(it.name, bold = it.id.isEmpty(), payload = it) })
                 if (list.size > 1) onCategory(1, catsAdapter.rows[1]) else onCategory(0, catsAdapter.rows[0])
-                catsView.post { catsView.getChildAt(0)?.requestFocus() }
+                if (!keepNavFocus) catsView.post { catsView.getChildAt(0)?.requestFocus() }
             } catch (e: Exception) {
                 catsAdapter.submit(listOf(Row("Fehler: ${e.message}")))
             }
@@ -245,7 +298,7 @@ class MainActivity : AppCompatActivity() {
         catsAdapter.selected = pos; catsAdapter.notifyDataSetChanged()
         seriesOpen = null
         header.text = "${c.name} – lade…"
-        itemsAdapter.submit(emptyList())
+        submitItems(emptyList())
         loadJob?.cancel()
         loadJob = lifecycleScope.launch {
             try {
@@ -268,7 +321,7 @@ class MainActivity : AppCompatActivity() {
         currentItems = items
         header.text = "$title · ${items.size} Einträge"
         itemsAdapter.selected = -1
-        itemsAdapter.submit(items.map { rowFor(k, it) })
+        submitItems(items.map { rowFor(k, it) })
         itemsView.scrollToPosition(0)
         markPlaying(focus = false)
     }
@@ -290,7 +343,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshNow() {
         if (section == Section.LIVE && seriesOpen == null && itemsAdapter.rows.isNotEmpty() && itemsAdapter.rows[0].payload is Item) {
-            itemsAdapter.submit(currentItems.map { rowFor(Kind.LIVE, it) })
+            submitItems(currentItems.map { rowFor(Kind.LIVE, it) })
         }
         if (section == Section.EPG) renderEpg()
         if (infoOverlay.visibility == View.VISIBLE) fillInfo()
@@ -349,7 +402,7 @@ class MainActivity : AppCompatActivity() {
                 seriesOpen = null
                 currentItems = r
                 header.text = if (r.isEmpty()) "Nichts gefunden" + (if (repo.filterDE(k)) " (nur deutsche Titel)" else "") else "Suche „$q“ · ${r.size} Treffer"
-                itemsAdapter.submit(r.map { rowFor(k, it) })
+                submitItems(r.map { rowFor(k, it) })
             } catch (e: Exception) {
                 header.text = "Fehler: ${e.message}"
             }
@@ -359,7 +412,7 @@ class MainActivity : AppCompatActivity() {
     // ---------------- Filme & Serien ----------------
 
     private fun showMovie(it: Item) {
-        val dlg = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+        val dlg = AlertDialog.Builder(this, R.style.AppleDialog)
             .setTitle(it.name)
             .setMessage("Lade Beschreibung…")
             .setPositiveButton("▶ Abspielen") { _, _ -> play(Kind.MOVIE, it, it.name, emptyList()) }
@@ -382,7 +435,7 @@ class MainActivity : AppCompatActivity() {
         seriesOpen = s
         val backTitle = header.text.toString()
         header.text = "${s.name} – lade Episoden…"
-        itemsAdapter.submit(emptyList())
+        submitItems(emptyList())
         lifecycleScope.launch {
             try {
                 val d = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { repo.api!!.info("get_series_info", "series_id", s.id) }
@@ -408,7 +461,7 @@ class MainActivity : AppCompatActivity() {
                     lastSeason = ep.season
                     rows.add(Row("S${ep.season} E${ep.num}  ${ep.title}", label, ep.plot.take(120), payload = ep))
                 }
-                itemsAdapter.submit(rows)
+                submitItems(rows)
                 itemsView.post { itemsView.getChildAt(0)?.requestFocus() }
             } catch (ex: Exception) {
                 header.text = "Fehler: ${ex.message} ($backTitle)"
@@ -426,7 +479,7 @@ class MainActivity : AppCompatActivity() {
         catsAdapter.selected = 0
         renderEpg()
         if (repo.epg == null) loadEpg(false)
-        catsView.post { catsView.getChildAt(0)?.requestFocus() }
+        if (!keepNavFocus) catsView.post { catsView.getChildAt(0)?.requestFocus() }
     }
 
     private fun epgTarget(): Long {
@@ -443,7 +496,7 @@ class MainActivity : AppCompatActivity() {
         val e = repo.epg
         if (e == null) {
             header.text = if (repo.epgLoading) "TV-Programm für deutsche Sender wird geladen… (beim ersten Mal bis zu einer Minute)" else "Kein TV-Programm geladen."
-            itemsAdapter.submit(emptyList())
+            submitItems(emptyList())
             return
         }
         val t = epgTarget()
@@ -459,7 +512,7 @@ class MainActivity : AppCompatActivity() {
             rows.add(Row(ch.name, "${hm.format(Date(first.s * 1000))}  ${first.t}", next, ch.icon, if (live) pct(first) else -1, payload = ch))
         }
         header.text = "${rows.size} deutsche Sender · Quelle: ${e.source}"
-        itemsAdapter.submit(rows)
+        submitItems(rows)
         markPlaying(focus = false)
     }
 
@@ -475,115 +528,196 @@ class MainActivity : AppCompatActivity() {
 
     // ---------------- Einstellungen ----------------
 
-    private fun label(t: String, size: Float = 14f, color: String = "#8B93A1", top: Int = 14) = TextView(this).apply {
+    private fun label(t: String, size: Float = 14f, color: String = "#AEAEB2", top: Int = 14) = TextView(this).apply {
         text = t
         setTextSize(TypedValue.COMPLEX_UNIT_SP, size)
         setTextColor(Color.parseColor(color))
-        setPadding(0, dp(top), 0, dp(4))
+        setPadding(dp(4), dp(top), dp(4), dp(4))
+    }
+
+    /** Abschnittsüberschrift einer gruppierten Liste (wie in den Apple-Einstellungen) */
+    private fun sectionHeader(t: String) = TextView(this).apply {
+        text = t
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+        typeface = medium
+        setTextColor(col(R.color.muted))
+        setPadding(dp(16), dp(22), dp(16), dp(8))
+    }
+
+    /** Erklärtext unter einer Gruppe */
+    private fun footnote(t: String) = TextView(this).apply {
+        text = t
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+        setTextColor(col(R.color.muted))
+        setPadding(dp(16), dp(6), dp(16), 0)
+    }
+
+    /** Einstellungszeile: Titel links, Wert rechts. Ohne onClick = reine Info-Zeile */
+    private fun cell(title: String, value: String = "", onLong: (() -> Unit)? = null, onClick: (() -> Unit)? = null): LinearLayout {
+        val focusable = onClick != null
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            setBackgroundResource(if (focusable) R.drawable.cell_bg else R.drawable.info_cell_bg)
+            setPadding(dp(18), dp(12), dp(18), dp(12))
+            minimumHeight = dp(50)
+            isFocusable = focusable; isClickable = focusable
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(6) }
+        }
+        row.addView(TextView(this).apply {
+            text = title
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
+            setTextColor(ContextCompat.getColorStateList(this@MainActivity, R.color.cell_text))
+            isDuplicateParentStateEnabled = true
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        })
+        if (value.isNotEmpty()) row.addView(TextView(this).apply {
+            text = value
+            tag = "value"
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
+            setTextColor(ContextCompat.getColorStateList(this@MainActivity, R.color.cell_sub))
+            isDuplicateParentStateEnabled = true
+            gravity = Gravity.END
+            setPadding(dp(16), 0, 0, 0)
+        })
+        if (onClick != null) {
+            row.setOnClickListener { onClick() }
+            row.setOnFocusChangeListener { v, has -> v.focusLift(has, 1.02f) }
+        }
+        if (onLong != null) row.setOnLongClickListener { onLong(); true }
+        return row
     }
 
     private fun field(hint: String, value: String, password: Boolean) = EditText(this).apply {
         setText(value)
         this.hint = hint
-        setHintTextColor(Color.parseColor("#8B93A1"))
-        setTextColor(Color.parseColor("#E8EAEE"))
+        setHintTextColor(ContextCompat.getColorStateList(this@MainActivity, R.color.cell_sub))
+        setTextColor(ContextCompat.getColorStateList(this@MainActivity, R.color.cell_text))
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
         setBackgroundResource(R.drawable.field_bg)
-        setPadding(dp(12), dp(10), dp(12), dp(10))
+        setPadding(dp(18), dp(12), dp(18), dp(12))
         isSingleLine = true
         inputType = if (password) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
                     else InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(8) }
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(6) }
     }
 
-    private fun button(t: String, onClick: () -> Unit) = Button(this).apply {
+    /** Kapsel-Taste im Apple-TV-Stil */
+    private fun button(t: String, onClick: () -> Unit) = TextView(this).apply {
         text = t
-        isAllCaps = false
+        gravity = Gravity.CENTER
+        typeface = medium
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
+        setTextColor(ContextCompat.getColorStateList(this@MainActivity, R.color.cell_text))
+        setBackgroundResource(R.drawable.button_bg)
+        setPadding(dp(28), dp(12), dp(28), dp(12))
+        isFocusable = true; isClickable = true
         setOnClickListener { onClick() }
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(4) }
+        setOnFocusChangeListener { v, has -> v.focusLift(has, 1.05f) }
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            topMargin = dp(8); gravity = Gravity.CENTER_HORIZONTAL
+        }
     }
 
     private fun buildSettings() {
         val box = settingsBox
+        // Fokus nach dem Neuaufbau an derselben Stelle wiederherstellen
+        val focusIdx = box.focusedChild?.let { box.indexOfChild(it) } ?: -1
         box.removeAllViews()
         val acc = repo.account
-        box.addView(label("Einstellungen", 24f, "#E8EAEE", 0))
+        box.addView(TextView(this).apply {
+            text = "Einstellungen"
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 30f)
+            typeface = medium
+            setTextColor(col(R.color.text))
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(0, dp(4), 0, dp(4))
+        })
+        var firstFocus: View? = null
 
         // ---- Konten ----
-        box.addView(label("KONTEN"))
+        box.addView(sectionHeader("Konten"))
         if (repo.accounts.isEmpty()) {
-            box.addView(label("Noch kein Konto. Unten Zugangsdaten eingeben und speichern.", 15f, "#8B93A1", 0))
+            box.addView(cell("Noch kein Konto eingerichtet"))
         }
         for ((i, sa) in repo.accounts.withIndex()) {
             val active = i == repo.activeIndex
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-                setBackgroundResource(R.drawable.focus_bg); setPadding(dp(10), dp(8), dp(10), dp(8))
-                isFocusable = true; isClickable = true
-                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(4) }
+            val row = cell(sa.label + "  ·  " + sa.account.username, if (active) "✓ Aktiv" else "", onLong = { editAccountDialog(i) }) {
+                if (!active) { repo.switchTo(i); stopPlayer(); showBanner("Konto „${sa.label}“ ist jetzt aktiv", false); lifecycleScope.launch { repo.refreshUserInfo(); loadEpg(false); buildSettings() } }
             }
-            row.addView(TextView(this).apply {
-                text = (if (active) "●  " else "○  ") + sa.label + "   (" + sa.account.username + ")"
-                setTextColor(Color.parseColor(if (active) "#3D8BFD" else "#E8EAEE"))
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            })
-            row.setOnClickListener {
-                if (!active) { repo.switchTo(i); stopPlayer(); Toast.makeText(this, "Konto „${sa.label}“ aktiv", Toast.LENGTH_SHORT).show(); lifecycleScope.launch { repo.refreshUserInfo(); loadEpg(false); buildSettings() } }
-            }
-            row.setOnLongClickListener { editAccountDialog(i); true }
+            if (active) row.findViewWithTag<TextView>("value")?.setTextColor(col(R.color.accent))
+            if (firstFocus == null) firstFocus = row
             box.addView(row)
         }
-        box.addView(label("Tipp: Konto antippen = umschalten · lange drücken (OK gedrückt halten) = bearbeiten/löschen", 12f, "#8B93A1", 2))
+        if (repo.accounts.isNotEmpty()) box.addView(footnote("OK = Konto wechseln   ·   OK gedrückt halten = bearbeiten oder löschen"))
 
         // ---- Konto hinzufügen / Zugangsdaten ----
-        box.addView(label(if (repo.accounts.isEmpty()) "ANMELDUNG – Xtream-Codes-Zugangsdaten" else "KONTO HINZUFÜGEN"))
+        box.addView(sectionHeader(if (repo.accounts.isEmpty()) "Anmelden mit Xtream-Codes-Zugangsdaten" else "Konto hinzufügen"))
         val fLabel = field("Name (z. B. Wohnzimmer, Konto 2)", "", false)
         val fServer = field("Server-URL (http://anbieter:8080)", "", false)
         val fUser = field("Benutzername", "", false)
         val fPass = field("Passwort", "", true)
-        val msg = label("", 14f, "#FF6B6B", 2)
-        box.addView(fLabel); box.addView(fServer); box.addView(fUser); box.addView(fPass); box.addView(msg)
-        box.addView(button(if (repo.accounts.isEmpty()) "Speichern & verbinden" else "Konto hinzufügen & verbinden") {
-            msg.setTextColor(Color.parseColor("#8B93A1")); msg.text = "Verbinde…"
+        val msg = label("", 15f, "#FF453A", 2)
+        box.addView(fLabel); box.addView(fServer); box.addView(fUser); box.addView(fPass)
+        box.addView(button(if (repo.accounts.isEmpty()) "Speichern und verbinden" else "Konto hinzufügen und verbinden") {
+            msg.setTextColor(col(R.color.muted)); msg.text = "Verbinde…"
             lifecycleScope.launch {
                 try {
                     repo.saveAccount(fLabel.text.toString(), fServer.text.toString(), fUser.text.toString(), fPass.text.toString(), -1)
-                    msg.setTextColor(Color.parseColor("#4CC38A")); msg.text = "✓ Verbunden"
+                    msg.setTextColor(col(R.color.ok)); msg.text = "✓ Verbunden"
                     repo.refreshUserInfo(); loadEpg(false)
                     showSection(Section.LIVE)
                 } catch (e: Exception) {
-                    msg.setTextColor(Color.parseColor("#FF6B6B")); msg.text = e.message ?: "Fehler"
+                    msg.setTextColor(col(R.color.err)); msg.text = e.message ?: "Verbindung fehlgeschlagen. Server-URL und Zugangsdaten prüfen."
                 }
             }
         })
+        box.addView(msg.apply { gravity = Gravity.CENTER_HORIZONTAL })
 
         if (acc != null) {
             val u = repo.userInfo
             val exp = u.s("exp_date").toLongOrNull()?.takeIf { it > 0 }?.let { SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY).format(Date(it * 1000)) } ?: "unbegrenzt"
-            box.addView(label("AKTIVES KONTO"))
-            box.addView(label("Benutzer: ${u.s("username").ifEmpty { acc.username }}\nStatus: ${u.s("status").ifEmpty { "–" }}\nGültig bis: $exp\nVerbindungen: ${u.s("active_cons").ifEmpty { "0" }} von ${u.s("max_connections").ifEmpty { "–" }}\nServer: ${acc.server}", 15f, "#E8EAEE", 0))
+            box.addView(sectionHeader("Aktives Konto"))
+            box.addView(cell("Benutzer", u.s("username").ifEmpty { acc.username }))
+            box.addView(cell("Status", u.s("status").ifEmpty { "–" }))
+            box.addView(cell("Gültig bis", exp))
+            box.addView(cell("Verbindungen", "${u.s("active_cons").ifEmpty { "0" }} von ${u.s("max_connections").ifEmpty { "–" }}"))
+            box.addView(cell("Server", acc.server))
 
-            box.addView(label("FILME & SERIEN"))
-            box.addView(CheckBox(this).apply {
-                text = "Nur deutsche Fassungen anzeigen und durchsuchen"
-                setTextColor(Color.parseColor("#E8EAEE"))
-                isChecked = repo.deOnly
-                setOnCheckedChangeListener { _, v -> repo.deOnly = v }
+            box.addView(sectionHeader("Filme & Serien"))
+            box.addView(cell("Nur deutsche Fassungen", if (repo.deOnly) "Ein" else "Aus") {
+                repo.deOnly = !repo.deOnly
+                buildSettings()
             })
-            box.addView(label("TV-PROGRAMM"))
+            box.addView(footnote("Zeigt und durchsucht nur Titel in deutscher Fassung."))
+
+            box.addView(sectionHeader("TV-Programm"))
             val e = repo.epg
-            box.addView(label(if (e != null) "Quelle: ${e.source}\nStand: ${SimpleDateFormat("dd.MM. HH:mm", Locale.GERMANY).format(Date(e.updated * 1000))}\nSender: ${e.channels.size}"
-                else if (repo.epgLoading) "Wird geladen…" else "Noch nicht geladen.", 15f, "#E8EAEE", 0))
-            box.addView(button("TV-Programm jetzt aktualisieren") { loadEpg(true); Toast.makeText(this, "TV-Programm wird geladen…", Toast.LENGTH_SHORT).show() })
+            if (e != null) {
+                box.addView(cell("Quelle", e.source))
+                box.addView(cell("Stand", SimpleDateFormat("dd.MM. HH:mm", Locale.GERMANY).format(Date(e.updated * 1000))))
+                box.addView(cell("Sender", e.channels.size.toString()))
+            } else {
+                box.addView(cell("Status", if (repo.epgLoading) "Wird geladen…" else "Noch nicht geladen"))
+            }
+            box.addView(cell("TV-Programm aktualisieren") { loadEpg(true); showBanner("TV-Programm wird geladen…", false) })
         }
 
         // ---- Update: erst prüfen, dann fragen ----
-        box.addView(label("UPDATE"))
-        val upInfo = label("Installierte Version: ${Updater.versionName(this)} by CoreCX", 15f, "#E8EAEE", 0)
+        box.addView(sectionHeader("Software-Update"))
+        val upInfo = footnote("Installierte Version: ${Updater.versionName(this)}")
+        box.addView(cell("Nach Update suchen") { checkUpdate(upInfo) })
         box.addView(upInfo)
-        box.addView(button("Nach Update suchen") { checkUpdate(upInfo) })
-        box.addView(label("IPTV+ für Fire TV\nby CoreCX", 13f, "#8B93A1", 28))
-        box.post { navButtons[Section.SETTINGS]?.requestFocus() }
+
+        box.addView(TextView(this).apply {
+            text = android.text.Html.fromHtml("IPTV<font color='#0A84FF'>+</font> für Fire TV<br><small>Gebaut von CoreCX</small>")
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            setTextColor(col(R.color.muted))
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(0, dp(30), 0, 0)
+        })
+        val target = firstFocus
+        if (focusIdx >= 0) box.post { (box.getChildAt(focusIdx)?.takeIf { it.isFocusable } ?: target ?: navButtons[Section.SETTINGS])?.requestFocus() }
+        else if (!keepNavFocus) box.post { (target ?: navButtons[Section.SETTINGS])?.requestFocus() }
     }
 
     /** Konto bearbeiten oder löschen */
@@ -596,7 +730,7 @@ class MainActivity : AppCompatActivity() {
         val fUser = field("Benutzername", sa.account.username, false)
         val fPass = field("Passwort (leer = unverändert)", "", true)
         wrap.addView(fLabel); wrap.addView(fServer); wrap.addView(fUser); wrap.addView(fPass)
-        AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+        AlertDialog.Builder(this, R.style.AppleDialog)
             .setTitle("Konto bearbeiten")
             .setView(wrap)
             .setPositiveButton("Speichern") { _, _ ->
@@ -604,14 +738,14 @@ class MainActivity : AppCompatActivity() {
                     try {
                         repo.saveAccount(fLabel.text.toString(), fServer.text.toString(), fUser.text.toString(), fPass.text.toString(), index)
                         repo.refreshUserInfo(); buildSettings()
-                        Toast.makeText(this@MainActivity, "Gespeichert", Toast.LENGTH_SHORT).show()
+                        showBanner("Gespeichert", false)
                     } catch (e: Exception) {
-                        Toast.makeText(this@MainActivity, "Fehler: ${e.message}", Toast.LENGTH_LONG).show()
+                        showBanner("Fehler: ${e.message}", true)
                     }
                 }
             }
             .setNegativeButton("Löschen") { _, _ ->
-                AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                AlertDialog.Builder(this, R.style.AppleDialog)
                     .setMessage("Konto „${sa.label}“ wirklich löschen?")
                     .setPositiveButton("Löschen") { _, _ -> stopPlayer(); repo.removeAccount(index); lifecycleScope.launch { repo.refreshUserInfo(); loadEpg(false) }; buildSettings() }
                     .setNegativeButton("Abbrechen", null).show()
@@ -635,7 +769,7 @@ class MainActivity : AppCompatActivity() {
                     r == null -> info.text = "Installierte Version: ${Updater.versionName(this@MainActivity)} by CoreCX – kein Release gefunden."
                     r.number > cur -> {
                         info.text = "Update verfügbar: Build ${r.number} - CoreCX (installiert: ${Updater.versionName(this@MainActivity)})"
-                        AlertDialog.Builder(this@MainActivity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                        AlertDialog.Builder(this@MainActivity, R.style.AppleDialog)
                             .setTitle("Update verfügbar")
                             .setMessage("Build ${r.number} - CoreCX ist verfügbar.\nJetzt herunterladen und installieren?")
                             .setPositiveButton("Installieren") { _, _ -> runUpdate(info, r) }
@@ -786,11 +920,11 @@ class MainActivity : AppCompatActivity() {
             Mode.MINI -> {
                 // kleines Bild unten rechts – die Liste rückt nach oben, daher wird nichts verdeckt
                 lp.width = dp(256); lp.height = dp(144)
-                lp.gravity = Gravity.BOTTOM or Gravity.END; lp.setMargins(0, 0, dp(16), dp(16))
+                lp.gravity = Gravity.BOTTOM or Gravity.END; lp.setMargins(0, 0, dp(48), dp(27))
                 playerBox.visibility = View.VISIBLE
                 playerBox.isFocusable = false
                 infoOverlay.visibility = View.GONE
-                if (announce && fromFull) Toast.makeText(this, "Bild verkleinert – Sender nochmal anklicken = Vollbild, Zurück = beenden", Toast.LENGTH_LONG).show()
+                if (announce && fromFull) showBanner("Bild verkleinert  ·  Sender nochmal wählen = Vollbild  ·  Zurück = beenden", true)
                 if (fromFull && itemsView.visibility == View.VISIBLE && itemsAdapter.rows.isNotEmpty()) markPlaying(focus = true)
             }
         }
@@ -829,11 +963,11 @@ class MainActivity : AppCompatActivity() {
         val cur = ch?.current()
         if (cur != null) {
             val left = ((cur.e - System.currentTimeMillis() / 1000) / 60).coerceAtLeast(1)
-            now.text = "● JETZT  ${hm.format(Date(cur.s * 1000))} – ${hm.format(Date(cur.e * 1000))}  ·  noch $left Min.\n${cur.t}"
+            now.text = android.text.Html.fromHtml("<font color='#AEAEB2'>JETZT  ·  ${hm.format(Date(cur.s * 1000))} – ${hm.format(Date(cur.e * 1000))}  ·  noch $left Min.</font><br>" + android.text.TextUtils.htmlEncode(cur.t))
             bar.visibility = View.VISIBLE; bar.progress = pct(cur)
             desc.text = cur.d; desc.visibility = if (cur.d.isEmpty()) View.GONE else View.VISIBLE
             val up = ch.upcoming().filter { p -> p.s > cur.s }.take(4)
-            next.text = if (up.isEmpty()) "" else "DANACH\n" + up.joinToString("\n") { p -> "${hm.format(Date(p.s * 1000))}   ${p.t}" }
+            next.text = if (up.isEmpty()) "" else "Danach\n" + up.joinToString("\n") { p -> "${hm.format(Date(p.s * 1000))}   ${p.t}" }
         } else {
             now.text = if (playingKind == Kind.LIVE) (if (repo.epgLoading) "TV-Programm wird geladen…" else "Kein Programm verfügbar") else ""
             bar.visibility = View.GONE; desc.visibility = View.GONE; next.text = ""

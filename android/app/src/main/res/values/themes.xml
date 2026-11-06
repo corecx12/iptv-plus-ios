@@ -1,15 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg">#0E1013</color>
-    <color name="panel">#16191E</color>
-    <color name="panel2">#1D2128</color>
-    <color name="accent">#3D8BFD</color>
-    <color name="text">#E8EAEE</color>
-    <color name="muted">#8B93A1</color>
+    <!-- Apple-Dunkelpalette (tvOS / iOS Dark Appearance) -->
+    <color name="bg">#000000</color>
+    <color name="bgTop">#1C1C1E</color>
+    <color name="panel">#1C1C1E</color>
+    <color name="panel2">#2C2C2E</color>
+    <color name="fill">#3A3A3C</color>
+    <color name="accent">#0A84FF</color>
+    <color name="text">#FFFFFF</color>
+    <color name="muted">#AEAEB2</color>
+    <color name="onFocus">#000000</color>
+    <color name="onFocusMuted">#6E6E73</color>
+    <color name="ok">#30D158</color>
+    <color name="err">#FF453A</color>
+
     <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:windowBackground">@drawable/bg_gradient</item>
         <item name="android:textColor">@color/text</item>
         <item name="colorAccent">@color/accent</item>
         <item name="android:windowFullscreen">true</item>
+    </style>
+
+    <!-- Dialoge im App-Look statt System-Standard -->
+    <style name="AppleDialog" parent="@android:style/Theme.DeviceDefault.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_bg</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:textColorPrimary">@color/text</item>
+        <item name="android:textColorSecondary">@color/muted</item>
+        <item name="android:buttonBarButtonStyle">@style/AppleDialogButton</item>
+    </style>
+    <style name="AppleDialogButton" parent="@android:style/Widget.DeviceDefault.Button.Borderless">
+        <item name="android:background">@drawable/button_bg</item>
+        <item name="android:textColor">@color/cell_text</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:paddingStart">22dp</item>
+        <item name="android:paddingEnd">22dp</item>
+        <item name="android:layout_marginStart">6dp</item>
     </style>
 </resources>
