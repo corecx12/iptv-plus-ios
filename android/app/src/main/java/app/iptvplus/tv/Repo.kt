@@ -164,7 +164,7 @@ class Repo(private val ctx: Context) {
     suspend fun items(k: Kind, cat: String): List<Item> {
         if (cat.isEmpty()) {
             val all = allItems(k)
-            return if (filterDE(k)) all.filter { isGerman(it, k) } else all
+            return if (filterDE(k)) withContext(Dispatchers.Default) { all.filter { isGerman(it, k) } } else all
         }
         return withContext(Dispatchers.IO) {
             listCache["${k.path}:$cat"] ?: api!!.items(k, cat).also { listCache["${k.path}:$cat"] = it }
@@ -175,9 +175,9 @@ class Repo(private val ctx: Context) {
     suspend fun search(k: Kind, query: String): List<Item> {
         val q = Lang.normQ(query)
         if (q.isEmpty()) return emptyList()
-        var all = allItems(k)
-        if (filterDE(k)) all = all.filter { isGerman(it, k) }
+        val raw = allItems(k)
         return withContext(Dispatchers.Default) {
+            val all = if (filterDE(k)) raw.filter { isGerman(it, k) } else raw
             val hits = all.filter { Lang.normQ(it.name).contains(q) }
             if (hits.isNotEmpty() || q.length < 4) hits else all.filter { Lang.fuzzy(q, Lang.normQ(it.name)) }.take(300)
         }

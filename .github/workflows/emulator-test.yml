@@ -3,6 +3,9 @@ name: Emulator-Test (Fire TV)
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -27,19 +30,26 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Testserver starten
-        run: nohup python3 .github/test/mock_xtream.py 8080 > mock.log 2>&1 &
+        run: MOVIES=120000 SERIES=20000 nohup python3 .github/test/mock_xtream.py 8080 > mock.log 2>&1 &
       - name: Emulator starten und App testen
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
+          api-level: 28
           arch: x86_64
           target: google_apis
           profile: tv_1080p
           ram-size: 2048M
-          heap-size: 256M
+          heap-size: 192M
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           script: bash .github/test/run_emulator.sh
+      - name: Ergebnis in Zweig emu-ergebnis ablegen
+        if: always()
+        run: |
+          mkdir -p /tmp/res && cp -r emu-out/* /tmp/res/ 2>/dev/null; cp mock.log /tmp/res/ 2>/dev/null
+          cd /tmp/res && git init -q && git checkout -q -b emu-ergebnis
+          git -c user.name=ci -c user.email=ci@local add -A && git -c user.name=ci -c user.email=ci@local commit -qm "Emulator-Ergebnis ${{ github.run_number }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" emu-ergebnis
       - uses: actions/upload-artifact@v4
         if: always()
         with:

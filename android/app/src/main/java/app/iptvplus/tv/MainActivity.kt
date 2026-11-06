@@ -233,6 +233,7 @@ class MainActivity : AppCompatActivity() {
 
         // Reihen
         shelfAdapter = ShelfAdapter({ i, c, v -> onShelfFocus(shelvesView, i, c, v) }, { i, c, v -> onCardClick(shelfAdapter, i, c, v) })
+        shelfAdapter.onBindShelf = { i -> onBindShelf(i) }
         shelvesView.layoutManager = ShelfLayoutManager(this)
         shelvesView.adapter = shelfAdapter
         shelvesView.itemAnimator = null
@@ -500,8 +501,49 @@ class MainActivity : AppCompatActivity() {
         return Shelf("Weiterschauen", CardStyle.POSTER, list.take(20).map { resumeCard(it) })
     }
 
+    private var shelfGen = 0
+    private var shelfWantFocus = false
+    private val shelfLoading = HashSet<String>()
+
+    /** Reihe kommt ins Bild: ihre Kategorie nachladen (nur diese – spart Speicher) */
+    private fun onBindShelf(i: Int) {
+        val sh = shelfAdapter.shelves.getOrNull(i) ?: return
+        if (!sh.placeholder) return
+        val src = sh.source as? MoreLink ?: return
+        val key = "${src.kind}:${src.catId}:${sh.title}"
+        if (!shelfLoading.add(key)) return
+        val gen = shelfGen
+        lifecycleScope.launch {
+            val list = try { repo.items(src.kind, src.catId) } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                catch (e: Exception) { emptyList() } catch (e: OutOfMemoryError) { emptyList() }
+            shelfLoading.remove(key)
+            if (gen != shelfGen) return@launch
+            val idx = shelfAdapter.shelves.indexOfFirst { it.source === src }
+            if (idx < 0) return@launch
+            val limit = if (src.kind == Kind.LIVE) 40 else 30
+            val cards = if (src.kind == Kind.LIVE) list.take(limit).map { channelCard(it) }
+                else list.sortedByDescending { it.added }.take(limit).map { posterCard(src.kind, it) }
+            if (cards.isEmpty()) { shelfAdapter.removeAt(idx); return@launch }
+            val more = if (list.size > limit) listOf(Card("Alle", more = true, payload = src)) else emptyList()
+            shelfAdapter.replaceCards(idx, cards + more)
+            if (heroEnabled && heroCard == null) applyHero(cards.first())
+            if (shelfWantFocus && page == Page.SHELVES && currentFocus?.let { f -> pageShelves.findFocus() === f } != true && !navHasFocus()) {
+                shelfWantFocus = false
+                shelvesView.post { focusFirstShelfCard() }
+            }
+        }
+    }
+
+    /** Kategorien mit neuen Titeln zuerst */
+    private val reNew = Regex("neu|new|kino|aktuell|recent|top|20(2[4-9])", RegexOption.IGNORE_CASE)
+
+    private fun lazyShelf(title: String, k: Kind, c: Category) =
+        Shelf(title, if (k == Kind.LIVE) CardStyle.CHANNEL else CardStyle.POSTER, placeholderCards(), MoreLink(k, c.id), placeholder = true)
+
     private fun loadShelves(s: Section) {
         loadJob?.cancel()
+        shelfGen++
+        shelfLoading.clear()
         shelfAdapter.submit(emptyList())
         heroEnabled = s != Section.LIVE
         heroCard = null
@@ -514,6 +556,7 @@ class MainActivity : AppCompatActivity() {
         shelvesMsg.text = "Wird geladen…"
         shelvesMsg.visibility = View.VISIBLE
         val wantFocus = !keepNavFocus
+        shelfWantFocus = wantFocus
         loadJob = lifecycleScope.launch {
             var first = true
             fun add(sh: Shelf) {
@@ -522,8 +565,10 @@ class MainActivity : AppCompatActivity() {
                     first = false
                     shelvesMsg.visibility = View.GONE
                     shelfAdapter.submit(listOf(sh))
-                    if (heroEnabled) sh.cards.firstOrNull { !it.more }?.let { applyHero(it) }
-                    if (wantFocus && !navHasFocus()) shelvesView.post { focusFirstShelfCard() }
+                    if (!sh.placeholder) {
+                        if (heroEnabled) sh.cards.firstOrNull { !it.more }?.let { applyHero(it) }
+                        if (wantFocus && !navHasFocus()) { shelfWantFocus = false; shelvesView.post { focusFirstShelfCard() } }
+                    }
                 } else shelfAdapter.append(sh)
             }
             try {
@@ -552,37 +597,30 @@ class MainActivity : AppCompatActivity() {
 
     private suspend fun buildHome(add: (Shelf) -> Unit) {
         continueShelf(null)?.let(add)
-        val movies = try { repo.items(Kind.MOVIE, "") } catch (e: Exception) { emptyList() } catch (e: OutOfMemoryError) { emptyList() }
-        add(Shelf("Neue Filme", CardStyle.POSTER, movies.sortedByDescending { it.added }.take(30).map { posterCard(Kind.MOVIE, it) }))
-        val series = try { repo.items(Kind.SERIES, "") } catch (e: Exception) { emptyList() } catch (e: OutOfMemoryError) { emptyList() }
-        add(Shelf("Neue Serien", CardStyle.POSTER, series.sortedByDescending { it.added }.take(30).map { posterCard(Kind.SERIES, it) }))
+        val mc = try { repo.categories(Kind.MOVIE) } catch (e: Exception) { emptyList() }
+        (mc.firstOrNull { reNew.containsMatchIn(it.name) } ?: mc.firstOrNull())?.let { add(lazyShelf("Neue Filme", Kind.MOVIE, it)) }
+        val sc = try { repo.categories(Kind.SERIES) } catch (e: Exception) { emptyList() }
+        (sc.firstOrNull { reNew.containsMatchIn(it.name) } ?: sc.firstOrNull())?.let { add(lazyShelf("Neue Serien", Kind.SERIES, it)) }
         val chans = repo.epg?.channels?.take(24)?.map { c -> Item(c.streamId, c.name, c.icon, "", "ts", c.num, "", "", "") }
-            ?: try { repo.allItems(Kind.LIVE).take(24) } catch (e: Exception) { emptyList() }
-        add(Shelf("Live jetzt", CardStyle.CHANNEL, chans.map { channelCard(it) }))
+        if (chans != null) add(Shelf("Live jetzt", CardStyle.CHANNEL, chans.map { channelCard(it) }))
+        else {
+            val lc = try { repo.categories(Kind.LIVE) } catch (e: Exception) { emptyList() }
+            (lc.firstOrNull { Lang.reGerman.containsMatchIn(it.name) } ?: lc.firstOrNull())?.let { add(lazyShelf("Live jetzt", Kind.LIVE, it)) }
+        }
+        // weitere Kategorien als Reihen
+        for (c in mc.filter { reNew.containsMatchIn(it.name) }.drop(1).take(3)) add(lazyShelf(clean(c.name), Kind.MOVIE, c))
     }
 
+    /** Filme/Serien: eine Reihe pro Kategorie, Inhalte laden erst beim Anzeigen */
     private suspend fun buildVod(k: Kind, add: (Shelf) -> Unit) {
         continueShelf(k)?.let(add)
-        val all = repo.items(k, "")
-        val cs = repo.categories(k)
-        add(Shelf("Neu hinzugefügt", CardStyle.POSTER, all.sortedByDescending { it.added }.take(30).map { posterCard(k, it) }))
-        val byCat = all.groupBy { it.categoryId }
-        for (c in cs) {
-            val list = byCat[c.id] ?: continue
-            val cards = list.take(30).map { posterCard(k, it) } + (if (list.size > 30) listOf(Card("Alle", more = true, payload = MoreLink(k, c.id))) else emptyList())
-            add(Shelf(clean(c.name), CardStyle.POSTER, cards))
-        }
+        val cs = repo.categories(k).sortedBy { if (reNew.containsMatchIn(it.name)) 0 else 1 }
+        for (c in cs) add(lazyShelf(clean(c.name), k, c))
     }
 
     private suspend fun buildLive(add: (Shelf) -> Unit) {
         val cs = repo.categories(Kind.LIVE).sortedBy { if (Lang.reGerman.containsMatchIn(it.name)) 0 else 1 }
-        val all = repo.allItems(Kind.LIVE)
-        val byCat = all.groupBy { it.categoryId }
-        for (c in cs) {
-            val list = byCat[c.id] ?: continue
-            val cards = list.take(40).map { channelCard(it) } + (if (list.size > 40) listOf(Card("Alle", more = true, payload = MoreLink(Kind.LIVE, c.id))) else emptyList())
-            add(Shelf(clean(c.name), CardStyle.CHANNEL, cards))
-        }
+        for (c in cs) add(lazyShelf(clean(c.name), Kind.LIVE, c))
     }
 
     /** Titelbild ausblenden, wenn nach unten gescrollt wird; Kopfzeile blendet mit aus */

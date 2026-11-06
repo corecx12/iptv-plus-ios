@@ -31,7 +31,7 @@ for i in range(3000):
                  "stream_icon": img("logo", i % 50, 120, 80) if i % 7 else "", "epg_channel_id": f"sender{i}.de" if i % 3 else None,
                  "added": str(NOW - i * 100), "category_id": c["category_id"], "tv_archive": 0})
 movies = []
-for i in range(30000):
+for i in range(int(__import__('os').environ.get('MOVIES','30000'))):
     c = vod_cats[i % 60]
     de = int(c["category_id"]) < 240
     movies.append({"num": i + 1, "name": ("DE: " if de else "EN: ") + f"Film Nummer {i} ({2000 + i % 25})", "stream_type": "movie", "stream_id": 50000 + i,
@@ -39,7 +39,7 @@ for i in range(30000):
                    "rating_5based": 3.5, "added": str(NOW - i * 37), "category_id": c["category_id"], "category_ids": [int(c["category_id"])],
                    "container_extension": "mp4", "custom_sid": None, "direct_source": ""})
 series = []
-for i in range(5000):
+for i in range(int(__import__('os').environ.get('SERIES','5000'))):
     c = ser_cats[i % 40]
     de = int(c["category_id"]) < 330
     series.append({"num": i + 1, "name": ("DE: " if de else "EN: ") + f"Serie {i}", "series_id": 90000 + i,

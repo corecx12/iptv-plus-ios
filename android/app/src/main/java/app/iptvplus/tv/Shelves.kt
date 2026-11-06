@@ -33,7 +33,10 @@ data class Card(
 )
 
 /** Eine waagerechte Reihe mit Überschrift */
-data class Shelf(val title: String, val style: CardStyle, val cards: List<Card>)
+data class Shelf(val title: String, val style: CardStyle, val cards: List<Card>, val source: Any? = null, val placeholder: Boolean = false)
+
+/** graue Platzhalter, solange eine Reihe lädt */
+fun placeholderCards(n: Int = 7) = List(n) { Card("") }
 
 /** Beschreibung, Bilder & Infos zu Film oder Serie aus get_vod_info / get_series_info */
 data class Meta(val plot: String, val genre: String, val duration: String, val year: String, val rating: String, val backdrop: String, val poster: String) {
@@ -180,6 +183,9 @@ class CardAdapter(
             h.label.text = card.title
             h.label.visibility = View.VISIBLE
         }
+        val real = card.payload != null || card.more
+        h.root.isFocusable = real
+        if (!real) { h.label.visibility = View.GONE; h.title.visibility = View.INVISIBLE }
         if (!h.root.isFocused) { h.root.scaleX = 1f; h.root.scaleY = 1f; h.frame.translationZ = 0f }
         h.root.setOnClickListener { v -> onClick(card, v) }
         h.root.setOnFocusChangeListener { v, has ->
@@ -203,7 +209,23 @@ class ShelfAdapter(
         private set
     private val scroll = HashMap<Int, android.os.Parcelable?>()
 
+    /** wird beim Anzeigen einer Reihe aufgerufen (zum Nachladen) */
+    var onBindShelf: ((Int) -> Unit)? = null
+
     fun submit(list: List<Shelf>) { shelves = list; scroll.clear(); notifyDataSetChanged() }
+
+    /** Kacheln einer Reihe austauschen, ohne die Reihe neu aufzubauen */
+    fun replaceCards(i: Int, cards: List<Card>) {
+        val l = shelves.toMutableList()
+        l[i] = l[i].copy(cards = cards, placeholder = false)
+        shelves = l
+        notifyItemChanged(i, "cards")
+    }
+
+    fun removeAt(i: Int) {
+        val l = shelves.toMutableList(); l.removeAt(i); shelves = l
+        notifyItemRemoved(i)
+    }
 
     fun append(s: Shelf) { shelves = shelves + s; notifyItemInserted(shelves.size - 1) }
 
@@ -261,8 +283,17 @@ class ShelfAdapter(
 
     override fun getItemCount() = shelves.size
 
+    override fun onBindViewHolder(h: VH, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isNotEmpty() && h.adapter != null) {
+            h.adapter?.submit(shelves[position].cards)
+            return
+        }
+        onBindViewHolder(h, position)
+    }
+
     override fun onBindViewHolder(h: VH, position: Int) {
         val s = shelves[position]
+        onBindShelf?.invoke(position)
         h.title.text = s.title
         h.title.visibility = if (s.title.isEmpty()) View.GONE else View.VISIBLE
         val a = CardAdapter(s.style, { card, v -> onCardFocus(h.bindingAdapterPosition, card, v) }, { card, v -> onCardClick(h.bindingAdapterPosition, card, v) })
