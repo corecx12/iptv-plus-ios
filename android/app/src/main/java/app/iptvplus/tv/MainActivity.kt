@@ -168,6 +168,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        installCrashLog()
         Ui.init(this)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_main)
@@ -267,6 +268,47 @@ class MainActivity : AppCompatActivity() {
         ui.postDelayed(object : Runnable {
             override fun run() { refreshNow(); ui.postDelayed(this, 60000) }
         }, 60000)
+        showLastCrash()
+    }
+
+    // ---------------- Absturz-Bericht ----------------
+
+    private fun crashFile() = java.io.File(filesDir, "last_crash.txt")
+
+    /** Bei einem Absturz die Fehlermeldung speichern, damit sie beim nächsten Start angezeigt werden kann */
+    private fun installCrashLog() {
+        val prev = Thread.getDefaultUncaughtExceptionHandler()
+        val f = crashFile()
+        Thread.setDefaultUncaughtExceptionHandler { t, e ->
+            try {
+                val sw = java.io.StringWriter()
+                e.printStackTrace(java.io.PrintWriter(sw))
+                f.writeText("Version ${Updater.versionName(this)} · " + SimpleDateFormat("dd.MM. HH:mm", Locale.GERMANY).format(Date()) + "\n" + sw.toString().take(6000))
+            } catch (_: Throwable) {}
+            prev?.uncaughtException(t, e)
+        }
+    }
+
+    private fun showLastCrash() {
+        val f = crashFile()
+        if (!f.exists()) return
+        val text = try { f.readText() } catch (e: Exception) { "" }
+        f.delete()
+        if (text.isBlank()) return
+        val tv = TextView(this).apply {
+            this.text = text
+            setTextColor(col(R.color.muted))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+            typeface = android.graphics.Typeface.MONOSPACE
+            setPadding(dp(20), dp(8), dp(20), dp(8))
+        }
+        val sv = ScrollView(this).apply { addView(tv); isFocusable = true }
+        AlertDialog.Builder(this, R.style.AppleDialog)
+            .setTitle("Die App ist beim letzten Mal abgestürzt")
+            .setMessage("Bitte ein Foto von diesem Text machen und an Claude schicken.")
+            .setView(sv)
+            .setPositiveButton("OK", null)
+            .show().also { Ui.fontify(it.window?.decorView); tv.typeface = android.graphics.Typeface.MONOSPACE }
     }
 
     override fun onDestroy() {
@@ -490,6 +532,8 @@ class MainActivity : AppCompatActivity() {
                 if (first) { shelvesMsg.text = "Hier gibt es noch nichts zu sehen."; shelvesMsg.visibility = View.VISIBLE }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
+            } catch (e: OutOfMemoryError) {
+                if (first) { shelvesMsg.text = "Zu viele Titel für den Speicher dieses Geräts."; shelvesMsg.visibility = View.VISIBLE }
             } catch (e: Exception) {
                 if (first) { shelvesMsg.text = e.message ?: "Inhalte konnten nicht geladen werden."; shelvesMsg.visibility = View.VISIBLE }
             }
@@ -504,9 +548,9 @@ class MainActivity : AppCompatActivity() {
 
     private suspend fun buildHome(add: (Shelf) -> Unit) {
         continueShelf(null)?.let(add)
-        val movies = try { repo.items(Kind.MOVIE, "") } catch (e: Exception) { emptyList() }
+        val movies = try { repo.items(Kind.MOVIE, "") } catch (e: Exception) { emptyList() } catch (e: OutOfMemoryError) { emptyList() }
         add(Shelf("Neue Filme", CardStyle.POSTER, movies.sortedByDescending { it.added }.take(30).map { posterCard(Kind.MOVIE, it) }))
-        val series = try { repo.items(Kind.SERIES, "") } catch (e: Exception) { emptyList() }
+        val series = try { repo.items(Kind.SERIES, "") } catch (e: Exception) { emptyList() } catch (e: OutOfMemoryError) { emptyList() }
         add(Shelf("Neue Serien", CardStyle.POSTER, series.sortedByDescending { it.added }.take(30).map { posterCard(Kind.SERIES, it) }))
         val chans = repo.epg?.channels?.take(24)?.map { c -> Item(c.streamId, c.name, c.icon, "", "ts", c.num, "", "", "") }
             ?: try { repo.allItems(Kind.LIVE).take(24) } catch (e: Exception) { emptyList() }

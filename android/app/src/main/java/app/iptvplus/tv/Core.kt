@@ -43,6 +43,27 @@ data class Item(
     val added: Long = 0
 ) {
     companion object {
+        /** nur diese Felder werden beim Lesen großer Listen behalten */
+        val FIELDS = setOf("series_id", "stream_id", "name", "cover", "stream_icon", "category_id", "container_extension",
+            "num", "epg_channel_id", "year", "releaseDate", "rating", "added", "last_modified")
+
+        fun from(m: Map<String, String>, k: Kind): Item {
+            fun g(key: String) = m[key] ?: ""
+            val y = g("year")
+            return Item(
+                id = if (k == Kind.SERIES) g("series_id") else g("stream_id"),
+                name = g("name"),
+                icon = if (k == Kind.SERIES) g("cover") else g("stream_icon"),
+                categoryId = g("category_id"),
+                ext = g("container_extension"),
+                num = g("num").toIntOrNull() ?: 0,
+                epgId = g("epg_channel_id").lowercase().trim(),
+                year = if (y.isNotEmpty()) y else g("releaseDate").take(4),
+                rating = g("rating"),
+                added = g("added").toLongOrNull() ?: g("last_modified").toLongOrNull() ?: 0L
+            )
+        }
+
         fun from(o: JSONObject, k: Kind): Item {
             val y = o.s("year")
             return Item(
@@ -112,11 +133,40 @@ class XtreamApi(val acc: Account) {
         return (0 until a.length()).map { val o = a.getJSONObject(it); Category(o.s("category_id"), o.s("category_name")) }
     }
 
+    /**
+     * Liste direkt aus dem Datenstrom lesen (nicht erst als einen riesigen Text in den Speicher).
+     * Große Anbieter liefern zehntausende Filme – so bleibt der Speicherbedarf auf dem Fire TV klein.
+     */
     fun items(k: Kind, category: String? = null): List<Item> {
         val p = mutableMapOf("action" to k.listAction)
         if (!category.isNullOrEmpty()) p["category_id"] = category
-        val a = array(p)
-        return (0 until a.length()).map { Item.from(a.getJSONObject(it), k) }
+        open(apiUrl(p)).use { ins ->
+            val r = android.util.JsonReader(java.io.InputStreamReader(ins, Charsets.UTF_8))
+            r.isLenient = true
+            if (r.peek() != android.util.JsonToken.BEGIN_ARRAY) return emptyList()
+            val out = ArrayList<Item>()
+            r.beginArray()
+            while (r.hasNext()) {
+                if (r.peek() != android.util.JsonToken.BEGIN_OBJECT) { r.skipValue(); continue }
+                r.beginObject()
+                val m = HashMap<String, String>(16)
+                while (r.hasNext()) {
+                    val name = r.nextName()
+                    if (name !in Item.FIELDS) { r.skipValue(); continue }
+                    when (r.peek()) {
+                        android.util.JsonToken.STRING, android.util.JsonToken.NUMBER -> m[name] = r.nextString()
+                        android.util.JsonToken.BOOLEAN -> m[name] = r.nextBoolean().toString()
+                        android.util.JsonToken.NULL -> r.nextNull()
+                        else -> r.skipValue()
+                    }
+                }
+                r.endObject()
+                out.add(Item.from(m, k))
+            }
+            r.endArray()
+            out.trimToSize()
+            return out
+        }
     }
 
     fun info(action: String, key: String, id: String): JSONObject {
