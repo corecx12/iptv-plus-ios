@@ -259,16 +259,19 @@ class MainActivity : AppCompatActivity() {
             navEnteredFromOutside = tabs.any { it === new } && tabs.none { it === old }
         }
 
-        if (repo.account == null) {
-            showSection(Section.SETTINGS)
-        } else {
-            showSection(Section.HOME)
-            lifecycleScope.launch { repo.refreshUserInfo(); loadEpg(false) }
+        val startApp = {
+            if (repo.account == null) {
+                showSection(Section.SETTINGS)
+            } else {
+                showSection(Section.HOME)
+                lifecycleScope.launch { repo.refreshUserInfo(); loadEpg(false) }
+            }
         }
+        // nach einem Absturz zuerst den Bericht zeigen und erst danach laden
+        if (!showLastCrash(startApp)) startApp()
         ui.postDelayed(object : Runnable {
             override fun run() { refreshNow(); ui.postDelayed(this, 60000) }
         }, 60000)
-        showLastCrash()
     }
 
     // ---------------- Absturz-Bericht ----------------
@@ -289,12 +292,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showLastCrash() {
+    private fun showLastCrash(then: () -> Unit): Boolean {
         val f = crashFile()
-        if (!f.exists()) return
+        if (!f.exists()) return false
         val text = try { f.readText() } catch (e: Exception) { "" }
-        f.delete()
-        if (text.isBlank()) return
+        if (text.isBlank()) { f.delete(); return false }
         val tv = TextView(this).apply {
             this.text = text
             setTextColor(col(R.color.muted))
@@ -308,7 +310,9 @@ class MainActivity : AppCompatActivity() {
             .setMessage("Bitte ein Foto von diesem Text machen und an Claude schicken.")
             .setView(sv)
             .setPositiveButton("OK", null)
+            .setOnDismissListener { f.delete(); then() }
             .show().also { Ui.fontify(it.window?.decorView); tv.typeface = android.graphics.Typeface.MONOSPACE }
+        return true
     }
 
     override fun onDestroy() {

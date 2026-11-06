@@ -13,7 +13,11 @@ android {
         targetSdk = 34
         versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
         versionName = "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "1")
-        ndk { abiFilters += listOf("armeabi-v7a", "arm64-v8a") }
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+            // nur für den Emulator-Test zusätzlich x86_64
+            System.getenv("EXTRA_ABI")?.let { abiFilters += it }
+        }
     }
 
     signingConfigs {
