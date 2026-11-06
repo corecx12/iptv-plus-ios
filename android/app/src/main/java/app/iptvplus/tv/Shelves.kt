@@ -107,6 +107,8 @@ class CardAdapter(
             isFocusable = true; isFocusableInTouchMode = false; isClickable = true
             clipChildren = false; clipToPadding = false
             layoutParams = RecyclerView.LayoutParams(w, ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginEnd = dp(c, 22) }
+            // keine graue Android-Fokusfläche, die Kachel zeigt den Fokus selbst
+            if (android.os.Build.VERSION.SDK_INT >= 26) defaultFocusHighlightEnabled = false
         }
         val frame = FrameLayout(c).apply {
             setBackgroundResource(R.drawable.card_bg)

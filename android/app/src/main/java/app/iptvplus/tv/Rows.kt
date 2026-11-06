@@ -115,6 +115,7 @@ class RowAdapter(
             isFocusable = true
             isFocusableInTouchMode = false
             isClickable = true
+            if (android.os.Build.VERSION.SDK_INT >= 26) defaultFocusHighlightEnabled = false
             clipChildren = false
             clipToPadding = false
             setPadding(dp(parent, 8), dp(parent, 8), dp(parent, 8), dp(parent, 14))
