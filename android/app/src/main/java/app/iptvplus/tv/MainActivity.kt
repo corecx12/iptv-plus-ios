@@ -259,7 +259,7 @@ class MainActivity : AppCompatActivity() {
             navEnteredFromOutside = tabs.any { it === new } && tabs.none { it === old }
         }
 
-        val startApp = {
+        val startApp: () -> Unit = {
             if (repo.account == null) {
                 showSection(Section.SETTINGS)
             } else {
