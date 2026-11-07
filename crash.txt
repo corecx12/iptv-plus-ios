@@ -1,0 +1,822 @@
+11-07 00:08:07.549  5207  5207 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:08:07.618  5207  5207 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:08:07.620  5207  5207 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:08:07.641  5207  5207 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:08:07.642  5207  5207 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=106816, downTime=106816, deviceId=-1, source=0x101 }
+11-07 00:08:07.648  5207  5207 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=106816, downTime=106816, deviceId=-1, source=0x101 }
+11-07 00:08:07.649  5207  5207 D AndroidRuntime: Shutting down VM
+11-07 00:08:07.677  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:08:07.677  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:08:07.818  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b5b72b3)
+11-07 00:08:07.818  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b5b72b3)
+11-07 00:08:08.815  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c549070)
+11-07 00:08:08.815  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c549070)
+11-07 00:08:09.815  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@17c9321)
+11-07 00:08:09.815  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@17c9321)
+11-07 00:08:10.039  1896  4164 I ActivityManager: Killing 4589:com.google.process.gapps/u0a62 (adj 906): empty #17
+11-07 00:08:10.039  1896  1915 W libprocessgroup: kill(-4589, 9) failed: No such process
+11-07 00:08:10.065  1739  1739 I Zygote  : Process 4589 exited due to signal (9)
+11-07 00:08:10.075  1896  1915 W libprocessgroup: kill(-4589, 9) failed: No such process
+11-07 00:08:10.075  1896  1915 I libprocessgroup: Successfully killed process cgroup uid 10062 pid 4589 in 36ms
+11-07 00:08:10.196  1896  2249 E memtrack: Couldn't load memtrack module
+11-07 00:08:10.196  1896  2249 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:10.291  2572  2973 I EventLogSendingHelper: Sending log events.
+11-07 00:08:10.394  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:10.394  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:10.523  3856  3856 I CarrierServices: [2] RcsAutoStartReceiver.b: carrierServicesJibeServiceEnabled changed from true to true
+11-07 00:08:10.524  3856  3856 I CarrierServices: [2] RcsAutoStartReceiver.b: enableRcs changed from true to true
+11-07 00:08:10.524  3856  3856 I CarrierServices: [2] RcsAutoStartReceiver.b: RcsAutoStartReceiver triggered. Fetching RCS State. Action: android.intent.action.PACKAGE_CHANGED
+11-07 00:08:10.529  3856  3856 I CarrierServices: [2] aws.a: Migration binding to RcsMigrationService
+11-07 00:08:10.531  3636  3636 I Bugle   : returning RCS state provider.
+11-07 00:08:10.533  1896  1972 I InputReader: Reconfiguring input devices.  changes=0x00000010
+11-07 00:08:10.536  3636  3993 I CarrierServices: [68] inq.shouldUseCarrierServicesApkForV1Apis: Checking if using CarrierServices.apk is possible. Enabled: true, isAtLeastM: true, runningInsideBugle: true
+11-07 00:08:10.538  3636  3993 I CarrierServices: [68] inq.e: Network Operator: 310260
+11-07 00:08:10.541  3636  3993 I CarrierServices: [68] inq.e: carrierWithOldEcApis: false
+11-07 00:08:10.541  3636  3993 I CarrierServices: [68] inq.e: hasDialerThatSupportsNewEc: false
+11-07 00:08:10.541  2182  2182 D CarrierSvcBindHelper: No carrier app for: 0
+11-07 00:08:10.541  2182  2182 D ImsResolver: maybeAddedImsService, packageName: com.google.android.gms
+11-07 00:08:10.543  3636  3993 W RcsProvisioning: Failed to read configuration: /data/user/0/com.google.android.apps.messaging/files/rcsconfig (No such file or directory)
+11-07 00:08:10.543  3636  3993 W RcsProvisioning: java.io.FileNotFoundException: /data/user/0/com.google.android.apps.messaging/files/rcsconfig (No such file or directory)
+11-07 00:08:10.543  3636  3993 W RcsProvisioning: 	at java.io.FileInputStream.open0(Native Method)
+11-07 00:08:10.543  3636  3993 W RcsProvisioning: 	at java.io.FileInputStream.open(FileInputStream.java:231)
+11-07 00:08:10.543  3636  3993 W RcsProvisioning: 	at java.io.FileInputStream.<init>(FileInputStream.java:165)
+11-07 00:08:10.543  3636  3993 W RcsProvisioning: 	at android.app.ContextImpl.openFileInput(ContextImpl.java:560)
+11-07 00:08:10.543  3636  3993 W RcsProvisioning: 	at android.content.ContextWrapper.openFileInput(ContextWrapper.java:202)
+11-07 00:08:10.543  3636  3993 W RcsProvisioning: 	at ion.a(SourceFile:2)
+11-07 00:08:10.543  3636  3993 W RcsProvisioning: 	at idl.a(SourceFile:4)
+11-07 00:08:10.543  3636  3993 W RcsProvisioning: 	at idm.a(SourceFile:7)
+--
+11-07 00:08:10.862  5250  5250 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:08:10.884  5250  5250 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:08:10.884  5250  5250 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:08:10.893  5250  5250 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:08:10.893  5250  5250 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=110068, downTime=110068, deviceId=-1, source=0x101 }
+11-07 00:08:10.899  5250  5250 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=110068, downTime=110068, deviceId=-1, source=0x101 }
+11-07 00:08:10.900  5250  5250 D AndroidRuntime: Shutting down VM
+11-07 00:08:10.901  5250  5259 W app_process: Thread attaching while runtime is shutting down: Binder:5250_2
+11-07 00:08:10.901  5250  5259 I AndroidRuntime: NOTE: attach of thread 'Binder:5250_2' failed
+11-07 00:08:10.903  1896  2037 I AudioTrack: AUDIO_OUTPUT_FLAG_FAST successful; frameCount 0 -> 4512
+11-07 00:08:10.916  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:08:10.916  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:08:10.945  3636  3993 D RcsProvisioning: No backup token found
+11-07 00:08:10.945  3636  3993 E CarrierServices: [68] iez.getFile: File not found.: /data/user/0/com.google.android.apps.messaging/files/httpft_pending (No such file or directory)
+11-07 00:08:10.945  3636  3993 E CarrierServices: 	java.io.FileInputStream.open0(Native Method)
+11-07 00:08:10.945  3636  3993 E CarrierServices: 	java.io.FileInputStream.open(FileInputStream.java:231)
+11-07 00:08:10.945  3636  3993 E CarrierServices: 	java.io.FileInputStream.<init>(FileInputStream.java:165)
+11-07 00:08:10.945  3636  3993 E CarrierServices: 	android.app.ContextImpl.openFileInput(ContextImpl.java:560)
+11-07 00:08:10.945  3636  3993 E CarrierServices: 	android.content.ContextWrapper.openFileInput(ContextWrapper.java:202)
+11-07 00:08:10.945  3636  3993 E CarrierServices: 	iez.getFile(SourceFile:20)
+11-07 00:08:10.945  3636  3993 E CarrierServices: 	com.google.android.apps.messaging.rcsmigration.RcsStateProvider.buildRcsState(SourceFile:136)
+11-07 00:08:10.945  3636  3993 E CarrierServices: 	com.google.android.apps.messaging.rcsmigration.RcsStateProvider.getRcsState(SourceFile:6)
+11-07 00:08:10.945  3636  3993 E CarrierServices: 	com.google.android.ims.rcsmigration.IRcsStateProvider$Stub.dispatchTransaction(SourceFile:10)
+11-07 00:08:10.945  3636  3993 E CarrierServices: 	com.google.android.aidl.BaseStub.onTransact(SourceFile:18)
+11-07 00:08:10.945  3636  3993 E CarrierServices: 	android.os.Binder.execTransact(Binder.java:731)
+11-07 00:08:10.946  3856  3877 I CarrierServices: [44] awt.doInBackground: Saving RCS State
+11-07 00:08:10.946  3856  3877 I CarrierServices: [44] awt.doInBackground: Old operation mode: 2
+11-07 00:08:10.946  3856  3877 I CarrierServices: [44] awt.doInBackground: New operation mode: 2
+11-07 00:08:10.948  3636  3993 I CarrierServices: [68] RcsStateProvider.onMigrationComplete: Migration complete.
+11-07 00:08:10.984  3636  3993 I CarrierServices: [68] inq.shouldUseCarrierServicesApkForV1Apis: Checking if using CarrierServices.apk is possible. Enabled: true, isAtLeastM: true, runningInsideBugle: true
+11-07 00:08:10.994  3636  3993 I CarrierServices: [68] inq.e: Network Operator: 310260
+11-07 00:08:10.995  3636  3993 I CarrierServices: [68] inq.e: carrierWithOldEcApis: false
+11-07 00:08:10.995  3636  3993 I CarrierServices: [68] inq.e: hasDialerThatSupportsNewEc: false
+11-07 00:08:10.995  3636  3993 I CarrierServices: [68] RcsStateProvider.onMigrationComplete: Rcs Engine should be running in cs.apk. Stopping JibeService.
+11-07 00:08:11.047  3636  3993 I CarrierServices: [68] RcsStateProvider.onMigrationComplete: JibeService stopped: true
+11-07 00:08:11.066  3636  3993 I CarrierServices: [68] inq.e: Network Operator: 310260
+11-07 00:08:11.066  3636  3993 I CarrierServices: [68] inq.e: carrierWithOldEcApis: false
+11-07 00:08:11.066  3636  3993 I CarrierServices: [68] inq.e: hasDialerThatSupportsNewEc: false
+11-07 00:08:11.076  3636  3993 I CarrierServices: [68] jsn.connect: shouldUseCarrierServicesJibeService: true, CarrierServices rcs service found: true
+11-07 00:08:11.076  3636  3993 I CarrierServices: [68] jsn.connect: Binding to JibeService in CarrierServices.
+11-07 00:08:11.077  3286  5263 D DownloadManager: [1] Starting
+11-07 00:08:11.089  3636  3636 D RcsClientLib: Service com.google.android.rcs.client.chatsession.ChatSessionService connected. Will notify listeners: true
+11-07 00:08:11.089  3636  3636 V BugleRcs: com.google.android.rcs.client.chatsession.ChatSessionService RCS service connected
+11-07 00:08:11.091  3636  3993 I CarrierServices: [68] inq.e: Network Operator: 310260
+11-07 00:08:11.092  3636  3993 I CarrierServices: [68] inq.e: carrierWithOldEcApis: false
+11-07 00:08:11.092  3636  3993 I CarrierServices: [68] inq.e: hasDialerThatSupportsNewEc: false
+11-07 00:08:11.093  3636  3993 I CarrierServices: [68] jsn.connect: shouldUseCarrierServicesJibeService: true, CarrierServices rcs service found: true
+11-07 00:08:11.093  3636  3993 I CarrierServices: [68] jsn.connect: Binding to JibeService in CarrierServices.
+11-07 00:08:11.095  3636  3636 D RcsClientLib: Service com.google.android.rcs.client.events.EventService connected. Will notify listeners: true
+--
+11-07 00:08:11.240  5261  5261 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:08:11.262  5261  5261 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:08:11.263  5261  5261 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:08:11.272  5261  5261 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:08:11.272  5261  5261 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=110446, downTime=110446, deviceId=-1, source=0x101 }
+11-07 00:08:11.278  5261  5261 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=110446, downTime=110446, deviceId=-1, source=0x101 }
+11-07 00:08:11.279  1896  2037 I AudioTrack: AUDIO_OUTPUT_FLAG_FAST successful; frameCount 0 -> 4512
+11-07 00:08:11.279  5261  5261 D AndroidRuntime: Shutting down VM
+11-07 00:08:11.290  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:08:11.290  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:08:11.326  3636  3993 D RcsProvisioning: No backup token found
+11-07 00:08:11.326  3636  3993 D RcsProvisioning: Clearing backup token
+11-07 00:08:11.327  3636  3993 D RcsProvisioning: Exception while getting subscriber Id. Using default
+11-07 00:08:11.397  3636  3993 I CarrierServices: [68] RcsStateProvider.onMigrationComplete: Deleted transfers file: false
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: Failed to read configuration: /data/user/0/com.google.android.apps.messaging/files/rcsconfig (No such file or directory)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: java.io.FileNotFoundException: /data/user/0/com.google.android.apps.messaging/files/rcsconfig (No such file or directory)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: 	at java.io.FileInputStream.open0(Native Method)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: 	at java.io.FileInputStream.open(FileInputStream.java:231)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: 	at java.io.FileInputStream.<init>(FileInputStream.java:165)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: 	at android.app.ContextImpl.openFileInput(ContextImpl.java:560)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: 	at android.content.ContextWrapper.openFileInput(ContextWrapper.java:202)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: 	at ion.a(SourceFile:2)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: 	at idl.a(SourceFile:4)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: 	at idm.a(SourceFile:7)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: 	at iez.buildConferencesFileName(SourceFile:30)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: 	at com.google.android.apps.messaging.rcsmigration.RcsStateProvider.onMigrationComplete(SourceFile:48)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: 	at com.google.android.ims.rcsmigration.IRcsStateProvider$Stub.dispatchTransaction(SourceFile:14)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: 	at com.google.android.aidl.BaseStub.onTransact(SourceFile:18)
+11-07 00:08:11.398  3636  3993 W RcsProvisioning: 	at android.os.Binder.execTransact(Binder.java:731)
+11-07 00:08:11.398  3636  3993 D RcsProvisioning: Retrieving backup token
+11-07 00:08:11.399  3636  3993 D RcsProvisioning: Exception while getting subscriber Id. Using default
+11-07 00:08:11.517  3286  5263 D DownloadManager: [1] Finished with status SUCCESS
+11-07 00:08:11.535  3636  3993 D RcsProvisioning: No backup token found
+11-07 00:08:11.561  3856  3856 I CarrierServices: [2] aww.a: Unbinding RcsMigrationService
+11-07 00:08:11.575  2402  5237 E MS_DownloadManager: Unsupported Matchstick Download Type: 
+11-07 00:08:11.575  2402  5237 E MS_DownloadManager: Failed to get download uri for unsupported Matchstick download type: 
+11-07 00:08:11.582  2402  5235 I Vision  : Requesting optional module download of ocr.
+11-07 00:08:11.582  2402  5235 I Vision  : Exceeded maximum feature download tries for ocr
+11-07 00:08:11.582  2402  5235 W Vision  : Request of optional module download of ocr failed.
+11-07 00:08:11.586  2402  5235 I Vision  : Checking for download completion for 120761 -- ocr
+11-07 00:08:11.613  3286  3332 V DownloadManager: Deleting /data/data/com.android.providers.downloads/cache/params_expdate_c45e5b7.dat via provider delete
+11-07 00:08:11.665  2402  5025 I Icing   : Indexing com.google.android.gms-apps from com.google.android.gms
+11-07 00:08:11.667  2402  5025 I Icing   : Indexing done com.google.android.gms-apps
+11-07 00:08:11.773  3684  3691 I app.iptvplus.t: Compiler allocated 4MB to compile void android.widget.TextView.<init>(android.content.Context, android.util.AttributeSet, int, int)
+11-07 00:08:11.823  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@ccda708)
+11-07 00:08:11.828  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@ccda708)
+11-07 00:08:11.831  5243  5243 I dex2oat : Large app, accepted running with swap.
+11-07 00:08:12.202  5243  5281 W dex2oat : Accessing hidden method Landroid/view/View;->setTransitionVisibility(I)V (dark greylist, linking)
+--
+11-07 00:08:14.469  5290  5290 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:08:14.491  5290  5290 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:08:14.492  5290  5290 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:08:14.502  5290  5290 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:08:14.504  1587  1660 W audio_hw_generic: Not supplying enough data to HAL, expected position 319100 , only wrote 160560
+11-07 00:08:14.504  5290  5290 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=113679, downTime=113679, deviceId=-1, source=0x101 }
+11-07 00:08:14.510  5290  5290 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=113679, downTime=113679, deviceId=-1, source=0x101 }
+11-07 00:08:14.512  5290  5290 D AndroidRuntime: Shutting down VM
+11-07 00:08:14.514  1587  5264 W audio_hw_generic: Not supplying enough data to HAL, expected position 160724 , only wrote 160560
+11-07 00:08:14.523  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:08:14.523  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:08:14.547  2402  3176 W ChimeraConfigurator: Error syncing flags: qoq: COMMIT_TIMEOUT
+11-07 00:08:14.547  2402  3176 I ChmraDebugLogger: [79] COMMIT_TIMEOUT
+11-07 00:08:14.552  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:14.552  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:14.583  2402  3176 I ChmraDebugLogger: [52] null
+11-07 00:08:14.611  2402  3176 I ChimeraConfigService: Scheduling checkin for one-off execution between [3300,43200] seconds from now (1794010094611)
+11-07 00:08:14.812  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 40960
+11-07 00:08:14.819  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@8813e23)
+11-07 00:08:14.833  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@8813e23)
+11-07 00:08:14.834  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 40960
+11-07 00:08:14.836  1597  2335 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 40960
+11-07 00:08:14.870  3684  3700 I app.iptvplus.t: Background concurrent copying GC freed 71582(3MB) AllocSpace objects, 16(2MB) LOS objects, 50% free, 4MB/9MB, paused 15.483ms total 127.712ms
+11-07 00:08:14.871  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 40960
+11-07 00:08:15.253  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 925696
+11-07 00:08:15.656  5243  5283 W dex2oat : Verification of void com.google.android.gms.nearby.sharing.internal.IsOptedInParams.<clinit>() took 101.442ms
+11-07 00:08:15.666  1750  2937 W DnsTlsSocket: SSL_connect error 5, errno=111
+11-07 00:08:15.798  5243  5243 W dex2oat : Class alhp failed lock verification and will run slower.
+11-07 00:08:15.826  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@2084f20)
+11-07 00:08:15.827  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@2084f20)
+11-07 00:08:15.924  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:15.924  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:16.109  5243  5243 I dex2oat : Explicit concurrent copying GC freed 82418(10MB) AllocSpace objects, 0(0B) LOS objects, 94% free, 82KB/1618KB, paused 462us total 21.817ms
+11-07 00:08:16.819  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@865a0d9)
+11-07 00:08:16.825  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@865a0d9)
+11-07 00:08:16.940  5243  5243 I dex2oat : Explicit concurrent copying GC freed 76425(12MB) AllocSpace objects, 0(0B) LOS objects, 94% free, 86KB/1622KB, paused 470us total 24.732ms
+11-07 00:08:17.551  1738  2334 E SurfaceFlinger: ro.sf.lcd_density must be defined as a build property
+11-07 00:08:17.552  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+11-07 00:08:17.563  5306  5306 D HostConnection: createUnique: call
+11-07 00:08:17.563  5306  5306 D HostConnection: HostConnection::get() New Host Connection established 0x719356641640, tid 5306
+11-07 00:08:17.564  5306  5306 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_YUV420_888_to_NV21 ANDROID_EMU_YUV_Cache ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-07 00:08:17.565  5306  5306 E eglCodecCommon: GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-07 00:08:17.608  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:17.608  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:17.709  1587  1660 W audio_hw_generic: Not supplying enough data to HAL, expected position 465313 , only wrote 313920
+11-07 00:08:17.718  5310  5310 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:08:17.737  5310  5310 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:08:17.738  5310  5310 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:08:17.752  5310  5310 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:08:17.752  5310  5310 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_CENTER, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=116927, downTime=116927, deviceId=-1, source=0x101 }
+11-07 00:08:17.754  5310  5310 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_CENTER, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=116927, downTime=116927, deviceId=-1, source=0x101 }
+11-07 00:08:17.757  5310  5310 D AndroidRuntime: Shutting down VM
+11-07 00:08:17.762  1587  5264 W audio_hw_generic: Not supplying enough data to HAL, expected position 314084 , only wrote 313920
+11-07 00:08:17.812  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:08:17.812  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:08:17.820  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@39f997f)
+11-07 00:08:17.820  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@39f997f)
+11-07 00:08:17.959  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 233472
+11-07 00:08:17.966  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 233472
+11-07 00:08:18.072  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:18.072  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:18.175  5243  5303 W dex2oat : Verification of void bnbb.<init>() took 108.485ms
+11-07 00:08:18.183  1587  5264 W audio_hw_generic: Hardware backing HAL too slow, could only write 0 of 720 frames
+11-07 00:08:18.401  5243  5243 I dex2oat : Explicit concurrent copying GC freed 72654(9MB) AllocSpace objects, 0(0B) LOS objects, 94% free, 95KB/1631KB, paused 623us total 21.013ms
+11-07 00:08:18.820  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@2f33d4c)
+11-07 00:08:18.825  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@2f33d4c)
+11-07 00:08:19.288  5243  5243 I dex2oat : Explicit concurrent copying GC freed 76263(7MB) AllocSpace objects, 0(0B) LOS objects, 94% free, 97KB/1633KB, paused 595us total 13.612ms
+11-07 00:08:19.380  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:19.380  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:19.390  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:19.390  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:19.550  5243  5243 I dex2oat : Explicit concurrent copying GC freed 11513(1168KB) AllocSpace objects, 0(0B) LOS objects, 93% free, 99KB/1635KB, paused 473us total 2.988ms
+11-07 00:08:19.569  5243  5243 I dex2oat : dex2oat took 8.800s (11.337s cpu) (threads: 2) arena alloc=0B (0B) java alloc=99KB (102384B) native alloc=9MB (9549048B) free=2MB (3033864B) swap=16MB (16777216B)
+11-07 00:08:19.574  1744  1970 V installed: DexInv: --- END '/system/priv-app/PrebuiltGmsCore/PrebuiltGmsCore.apk' (success) ---
+11-07 00:08:19.577  1896  5219 I system_server: The ClassLoaderContext is a special shared library.
+11-07 00:08:19.657  1896  5219 I chatty  : uid=1000 system_server identical 42 lines
+11-07 00:08:19.659  1896  5219 I system_server: The ClassLoaderContext is a special shared library.
+11-07 00:08:19.660  1896  5219 I PackageManager.DexOptimizer: Running dexopt (dexoptNeeded=1) on: /data/app/app.iptvplus.tv-CyDpuEh_tTw9iuLpYX1XjA==/base.apk pkg=app.iptvplus.tv isa=x86_64 dexoptFlags=boot_complete,debuggable,public,enable_hidden_api_checks targetFilter=verify oatDir=/data/app/app.iptvplus.tv-CyDpuEh_tTw9iuLpYX1XjA==/oat classLoaderContext=PCL[]
+11-07 00:08:19.661  1744  1970 V installed: DexInv: --- BEGIN '/data/app/app.iptvplus.tv-CyDpuEh_tTw9iuLpYX1XjA==/base.apk' ---
+11-07 00:08:19.669  5322  5322 W dex2oat : Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:08:19.669  5322  5322 I dex2oat : /system/bin/dex2oat --input-vdex-fd=-1 --output-vdex-fd=10 --compiler-filter=verify --debuggable --classpath-dir=/data/app/app.iptvplus.tv-CyDpuEh_tTw9iuLpYX1XjA== --class-loader-context=PCL[] --generate-mini-debug-info --compact-dex-level=none --compilation-reason=boot
+11-07 00:08:19.820  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c1e4e9b)
+11-07 00:08:19.820  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c1e4e9b)
+11-07 00:08:20.044  5322  5322 W dex2oat : Accessing hidden method Landroid/content/res/Resources$Theme;->rebase()V (dark greylist, linking)
+11-07 00:08:20.106  5322  5322 W dex2oat : Accessing hidden method Landroid/view/accessibility/AccessibilityNodeInfo$RangeInfo;-><init>(IFFF)V (dark greylist, linking)
+11-07 00:08:20.110  5322  5324 W dex2oat : Accessing hidden method Landroid/view/accessibility/AccessibilityWindowInfo;-><init>()V (dark greylist, linking)
+11-07 00:08:20.409  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:20.409  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:20.413  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:20.413  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:20.550  2054  3410 W Nearby  : Failed attempt #3 out of 3 for RestoreDeviceName [CONTEXT service_id=49 ]
+11-07 00:08:20.550  2054  3410 W Nearby  : java.lang.IllegalStateException: BluetoothAdapter not ready yet!
+--
+11-07 00:08:23.942  5334  5334 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:08:23.962  5334  5334 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:08:23.963  5334  5334 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:08:23.972  5334  5334 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:08:23.973  5334  5334 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=123147, downTime=123147, deviceId=-1, source=0x101 }
+11-07 00:08:23.980  5334  5334 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=123147, downTime=123147, deviceId=-1, source=0x101 }
+11-07 00:08:23.980  1896  1913 D AutofillManagerService: onBackKeyPressed()
+11-07 00:08:23.982  5334  5334 D AndroidRuntime: Shutting down VM
+11-07 00:08:24.006  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:08:24.006  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:08:24.821  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a20174e)
+11-07 00:08:24.821  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a20174e)
+11-07 00:08:25.649  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:25.649  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:25.821  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b17e06f)
+11-07 00:08:25.821  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b17e06f)
+11-07 00:08:26.630  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:26.630  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:26.821  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@466917c)
+11-07 00:08:26.821  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@466917c)
+11-07 00:08:27.017  1738  1974 E SurfaceFlinger: ro.sf.lcd_density must be defined as a build property
+11-07 00:08:27.017  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+11-07 00:08:27.026  5347  5347 D HostConnection: createUnique: call
+11-07 00:08:27.026  5347  5347 D HostConnection: HostConnection::get() New Host Connection established 0x76e9bae41640, tid 5347
+11-07 00:08:27.028  5347  5347 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_YUV420_888_to_NV21 ANDROID_EMU_YUV_Cache ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-07 00:08:27.028  5347  5347 E eglCodecCommon: GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-07 00:08:27.145  5351  5351 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:08:27.164  5351  5351 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:08:27.165  5351  5351 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:08:27.173  5351  5351 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:08:27.174  5351  5351 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=126348, downTime=126348, deviceId=-1, source=0x101 }
+11-07 00:08:27.178  5351  5351 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=126348, downTime=126348, deviceId=-1, source=0x101 }
+11-07 00:08:27.179  5351  5351 D AndroidRuntime: Shutting down VM
+11-07 00:08:27.195  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:08:27.198  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:08:27.821  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@fec148b)
+11-07 00:08:27.821  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@fec148b)
+11-07 00:08:28.821  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4494968)
+11-07 00:08:28.821  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4494968)
+11-07 00:08:29.071  3276  3982 I Dialer  : OmtpVvmCarrierCfgHlpr - OmtpEvent:CONFIG_STATUS_SMS_TIME_OUT
+11-07 00:08:29.072  3276  3276 I Dialer  : RetryPolicy - discarding deferred status: configuration_state=4
+11-07 00:08:29.074  3276  3276 I Dialer  : VvmTaskExecutor - no more tasks, stopping service if no task are added in 5000 millis
+11-07 00:08:29.080  3276  3276 I Dialer  : VvmTaskReceiver - task received
+11-07 00:08:29.080  3276  3276 I Dialer  : VvmTaskReceiver - TaskExecutor already running
+11-07 00:08:29.080  3276  3276 I Dialer  : Task.createTask - create task:com.android.voicemail.impl.ActivationTask
+11-07 00:08:29.080  3276  3276 I Dialer  : RetryPolicy - retry #1 for com.android.voicemail.impl.ActivationTask@b0dfda2 queued, executing in 5000
+11-07 00:08:29.081  3276  3276 I Dialer  : VvmTaskExecutor - com.android.voicemail.impl.ActivationTask@b0dfda2 added
+11-07 00:08:29.081  3276  3276 I Dialer  : VvmTaskExecutor - minimal wait time:5000
+11-07 00:08:29.081  3276  3276 I Dialer  : VvmTaskExecutor - sleep for 5000 millis
+11-07 00:08:29.821  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@31d9414)
+11-07 00:08:29.822  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@31d9414)
+11-07 00:08:30.214  1738  1974 E SurfaceFlinger: ro.sf.lcd_density must be defined as a build property
+11-07 00:08:30.215  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+11-07 00:08:30.225  5363  5363 D HostConnection: createUnique: call
+11-07 00:08:30.225  5363  5363 D HostConnection: HostConnection::get() New Host Connection established 0x7fe44b641640, tid 5363
+11-07 00:08:30.227  5363  5363 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_YUV420_888_to_NV21 ANDROID_EMU_YUV_Cache ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-07 00:08:30.227  5363  5363 E eglCodecCommon: GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-07 00:08:30.367  5367  5367 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:08:30.386  5367  5367 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:08:30.387  5367  5367 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:08:30.397  5367  5367 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:08:30.397  5367  5367 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=129572, downTime=129572, deviceId=-1, source=0x101 }
+11-07 00:08:30.402  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:08:30.402  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:08:30.408  5367  5367 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=129572, downTime=129572, deviceId=-1, source=0x101 }
+11-07 00:08:30.411  1587  5264 W audio_hw_generic: Not supplying enough data to HAL, expected position 468060 , only wrote 468000
+11-07 00:08:30.416  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:30.416  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:30.423  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:30.423  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:30.433  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:30.433  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:30.465  5367  5367 D AndroidRuntime: Shutting down VM
+11-07 00:08:30.592  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 32768
+11-07 00:08:30.731  2402  2411 W System  : A resource failed to call close. 
+11-07 00:08:30.731  2402  2411 W SQLiteConnectionPool: A SQLiteConnection object for database '/data/user/0/com.google.android.gms/databases/lighter_registration.db' was leaked!  Please fix your application to end transactions in progress properly and to close the database when it is no longer needed.
+11-07 00:08:30.731  2402  2411 W System  : A resource failed to call close. 
+11-07 00:08:30.821  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@967c35f)
+11-07 00:08:30.822  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@967c35f)
+11-07 00:08:27.178  1896  1913 D AutofillManagerService: onBackKeyPressed()
+11-07 00:08:31.448  1896  4030 I ActivityManager: Killing 3168:com.google.android.youtube/u0a67 (adj 906): empty #17
+11-07 00:08:31.449  1896  1915 W libprocessgroup: kill(-3168, 9) failed: No such process
+11-07 00:08:31.449  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:31.449  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:31.486  1739  1739 I Zygote  : Process 3168 exited due to signal (9)
+11-07 00:08:31.486  1896  3275 D ConnectivityService: ConnectivityService NetworkRequestInfo binderDied(NetworkRequest [ TRACK_DEFAULT id=15, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Unwanted:  Uid: 10067] ], android.os.BinderProxy@92f51ac)
+11-07 00:08:31.486  1896  3275 D ConnectivityService: ConnectivityService NetworkRequestInfo binderDied(NetworkRequest [ LISTEN id=16, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Unwanted:  Uid: 10067] ], android.os.BinderProxy@b105e75)
+11-07 00:08:31.486  1896  2029 D ConnectivityService: releasing NetworkRequest [ TRACK_DEFAULT id=15, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Unwanted:  Uid: 10067] ] (release request)
+11-07 00:08:31.487  1896  1915 W libprocessgroup: kill(-3168, 9) failed: No such process
+11-07 00:08:31.487  1896  1915 I libprocessgroup: Successfully killed process cgroup uid 10067 pid 3168 in 38ms
+11-07 00:08:31.592  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:31.592  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:31.596  2402  5378 I Vision  : Requesting optional module download of ocr.
+11-07 00:08:31.596  2402  5378 I Vision  : Checking for download completion for 140770 -- ocr
+11-07 00:08:31.658  1896  1968 W ActivityManager: Unable to start service Intent { act=com.google.android.gms.drive.ApiService.RESET_AFTER_BOOT flg=0x4 cmp=com.google.android.gms/.drive.api.ApiService (has extras) } U=0: not found
+11-07 00:08:31.661  1896  1896 V SettingsProvider: Notifying for 0: content://settings/system/radio.data.stall.recovery.action
+11-07 00:08:31.821  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@7e0dba)
+11-07 00:08:31.822  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@7e0dba)
+11-07 00:08:32.205  2054  3436 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-07 00:08:32.206  2054  3436 W Conscrypt: 	at com.google.android.gms.org.conscrypt.Platform.setSocketWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):2)
+11-07 00:08:32.206  2054  3436 W Conscrypt: 	at com.google.android.gms.org.conscrypt.ConscryptFileDescriptorSocket.setSoWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):0)
+11-07 00:08:32.222  2054  3436 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-07 00:08:32.222  2054  3436 W Conscrypt: 	at com.google.android.gms.org.conscrypt.Platform.setSocketWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):2)
+11-07 00:08:32.222  2054  3436 W Conscrypt: 	at com.google.android.gms.org.conscrypt.ConscryptFileDescriptorSocket.setSoWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):0)
+11-07 00:08:32.496  2054  3436 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-07 00:08:32.496  2054  3436 W Conscrypt: 	at com.google.android.gms.org.conscrypt.Platform.setSocketWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):2)
+11-07 00:08:32.496  2054  3436 W Conscrypt: 	at com.google.android.gms.org.conscrypt.ConscryptFileDescriptorSocket.setSoWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):0)
+11-07 00:08:32.513  2054  3436 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-07 00:08:32.513  2054  3436 W Conscrypt: 	at com.google.android.gms.org.conscrypt.Platform.setSocketWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):2)
+11-07 00:08:32.513  2054  3436 W Conscrypt: 	at com.google.android.gms.org.conscrypt.ConscryptFileDescriptorSocket.setSoWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):0)
+11-07 00:08:32.821  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@dbb86f8)
+11-07 00:08:32.822  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@dbb86f8)
+11-07 00:08:33.636  1587  1660 W audio_hw_generic: Not supplying enough data to HAL, expected position 775621 , only wrote 622800
+--
+11-07 00:08:45.651  5421  5421 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:08:45.670  5421  5421 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:08:45.671  5421  5421 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:08:45.680  5421  5421 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:08:45.681  5421  5421 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=144855, downTime=144855, deviceId=-1, source=0x101 }
+11-07 00:08:45.690  5421  5421 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=144855, downTime=144855, deviceId=-1, source=0x101 }
+11-07 00:08:45.692  5421  5421 D AndroidRuntime: Shutting down VM
+11-07 00:08:45.692  1587  5264 W audio_hw_generic: Not supplying enough data to HAL, expected position 622859 , only wrote 622800
+11-07 00:08:45.707  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:08:45.712  2768  2768 I FeaturePermissions: onSharedPreferenceChanged() : Key = ACTIVE_IME.SOFT.en-US : Feature = null
+11-07 00:08:45.733  3684  3684 I AssistStructure: Flattened final assist data: 10940 bytes, containing 1 windows, 47 views
+11-07 00:08:45.740  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:45.740  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:45.789  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:45.789  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:45.794  1896  3347 I AssistStructure: Flattened final assist data: 10368 bytes, containing 1 windows, 47 views
+11-07 00:08:45.802  2054  2054 W ktk     : Pending fill request while another request in the same session was triggered. [CONTEXT service_id=177 ]
+11-07 00:08:45.820  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:45.820  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:45.830  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b56f881)
+11-07 00:08:45.911  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b56f881)
+11-07 00:08:45.910  1896  1913 D AutofillUI: destroySaveUiUiThread(): already destroyed
+11-07 00:08:46.655  5390  5405 I .apps.wallpape: Waiting for a blocking GC ProfileSaver
+11-07 00:08:46.824  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b6915b2)
+11-07 00:08:46.826  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b6915b2)
+11-07 00:08:47.017  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:47.017  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:47.824  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a06a903)
+11-07 00:08:47.824  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a06a903)
+11-07 00:08:48.781  1738  1974 E SurfaceFlinger: ro.sf.lcd_density must be defined as a build property
+11-07 00:08:48.781  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+11-07 00:08:48.789  5434  5434 D HostConnection: createUnique: call
+11-07 00:08:48.789  5434  5434 D HostConnection: HostConnection::get() New Host Connection established 0x75caee641640, tid 5434
+11-07 00:08:48.791  5434  5434 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_YUV420_888_to_NV21 ANDROID_EMU_YUV_Cache ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-07 00:08:48.791  5434  5434 E eglCodecCommon: GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-07 00:08:48.824  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@7a71080)
+11-07 00:08:48.824  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@7a71080)
+11-07 00:08:48.913  5438  5438 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:08:48.918  1587  1660 W audio_hw_generic: Not supplying enough data to HAL, expected position 930379 , only wrote 777600
+11-07 00:08:48.932  5438  5438 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:08:48.933  5438  5438 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:08:48.942  5438  5438 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:08:48.943  5438  5438 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=148117, downTime=148117, deviceId=-1, source=0x101 }
+11-07 00:08:48.945  1848  1848 E netmgr  : Failed to open QEMU pipe 'qemud:network': Invalid argument
+11-07 00:08:48.945  1848  1848 E netmgr  : WifiForwarder unable to open QEMU pipe: Invalid argument
+11-07 00:08:48.950  5438  5438 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=148117, downTime=148117, deviceId=-1, source=0x101 }
+11-07 00:08:48.951  5438  5438 D AndroidRuntime: Shutting down VM
+11-07 00:08:49.001  5448  5448 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:08:49.022  5448  5448 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:08:49.023  5448  5448 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:08:49.032  5448  5448 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:08:49.033  5448  5448 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=148207, downTime=148207, deviceId=-1, source=0x101 }
+11-07 00:08:49.035  5448  5448 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=148207, downTime=148207, deviceId=-1, source=0x101 }
+11-07 00:08:49.036  5448  5448 D AndroidRuntime: Shutting down VM
+11-07 00:08:49.084  5458  5458 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:08:49.105  5458  5458 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:08:49.106  5458  5458 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:08:49.114  5458  5458 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:08:49.115  5458  5458 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=148289, downTime=148289, deviceId=-1, source=0x101 }
+11-07 00:08:49.118  5458  5458 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=148289, downTime=148289, deviceId=-1, source=0x101 }
+11-07 00:08:49.119  5458  5458 D AndroidRuntime: Shutting down VM
+11-07 00:08:49.824  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c2936b9)
+11-07 00:08:49.824  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c2936b9)
+11-07 00:08:50.731  1752  1799 E storaged: getDiskStats failed with result NOT_SUPPORTED and size 0
+11-07 00:08:50.824  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@84edafe)
+11-07 00:08:50.824  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@84edafe)
+11-07 00:08:51.721  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:51.721  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:51.728  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:51.728  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:51.734  2402  5469 I Vision  : Requesting optional module download of ocr.
+11-07 00:08:51.734  2402  5469 I Vision  : Checking for download completion for 160909 -- ocr
+11-07 00:08:51.737  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:08:51.737  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:08:51.796  1896  1972 I InputReader: Reconfiguring input devices.  changes=0x00000010
+11-07 00:08:51.801  3856  3856 I CarrierServices: [2] RcsAutoStartReceiver.b: carrierServicesJibeServiceEnabled changed from true to true
+11-07 00:08:51.803  3856  3856 I CarrierServices: [2] RcsAutoStartReceiver.b: enableRcs changed from true to true
+11-07 00:08:51.803  3856  3856 I CarrierServices: [2] RcsAutoStartReceiver.b: RcsAutoStartReceiver triggered. Fetching RCS State. Action: android.intent.action.PACKAGE_CHANGED
+11-07 00:08:51.804  3856  3856 I CarrierServices: [2] aws.a: Migration binding to RcsMigrationService
+11-07 00:08:51.806  3636  3636 I Bugle   : returning RCS state provider.
+11-07 00:08:51.810  1896  1896 I Telecom : DefaultDialerCache: Refreshing default dialer for user 0: now com.google.android.dialer: DDC.oR@AJY
+11-07 00:08:51.818  3636  4004 I CarrierServices: [71] inq.shouldUseCarrierServicesApkForV1Apis: Checking if using CarrierServices.apk is possible. Enabled: true, isAtLeastM: true, runningInsideBugle: true
+11-07 00:08:51.820  3636  4004 I CarrierServices: [71] inq.e: Network Operator: 310260
+11-07 00:08:51.822  3636  4004 I CarrierServices: [71] inq.e: carrierWithOldEcApis: false
+11-07 00:08:51.822  3636  4004 I CarrierServices: [71] inq.e: hasDialerThatSupportsNewEc: false
+11-07 00:08:51.826  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@8e90c3)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: Failed to read configuration: /data/user/0/com.google.android.apps.messaging/files/rcsconfig (No such file or directory)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: java.io.FileNotFoundException: /data/user/0/com.google.android.apps.messaging/files/rcsconfig (No such file or directory)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: 	at java.io.FileInputStream.open0(Native Method)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: 	at java.io.FileInputStream.open(FileInputStream.java:231)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: 	at java.io.FileInputStream.<init>(FileInputStream.java:165)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: 	at android.app.ContextImpl.openFileInput(ContextImpl.java:560)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: 	at android.content.ContextWrapper.openFileInput(ContextWrapper.java:202)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: 	at ion.a(SourceFile:2)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: 	at idl.a(SourceFile:4)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: 	at idm.a(SourceFile:7)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: 	at com.google.android.apps.messaging.rcsmigration.RcsStateProvider.buildRcsState(SourceFile:81)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: 	at com.google.android.apps.messaging.rcsmigration.RcsStateProvider.getRcsState(SourceFile:6)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: 	at com.google.android.ims.rcsmigration.IRcsStateProvider$Stub.dispatchTransaction(SourceFile:10)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: 	at com.google.android.aidl.BaseStub.onTransact(SourceFile:18)
+11-07 00:08:51.827  3636  4004 W RcsProvisioning: 	at android.os.Binder.execTransact(Binder.java:731)
+--
+11-07 00:09:04.307  5505  5505 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:04.326  5505  5505 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:04.327  5505  5505 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:04.336  5505  5505 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:04.336  5505  5505 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=163510, downTime=163510, deviceId=-1, source=0x101 }
+11-07 00:09:04.339  5505  5505 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=163510, downTime=163510, deviceId=-1, source=0x101 }
+11-07 00:09:04.340  5505  5505 D AndroidRuntime: Shutting down VM
+11-07 00:09:04.402  5515  5515 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:04.421  5515  5515 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:04.421  5515  5515 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:04.430  5515  5515 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:04.431  5515  5515 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=163605, downTime=163605, deviceId=-1, source=0x101 }
+11-07 00:09:04.433  5515  5515 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=163605, downTime=163605, deviceId=-1, source=0x101 }
+11-07 00:09:04.434  5515  5515 D AndroidRuntime: Shutting down VM
+11-07 00:09:04.826  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a3ce990)
+11-07 00:09:04.826  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a3ce990)
+11-07 00:09:05.826  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@798289)
+11-07 00:09:05.826  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@798289)
+11-07 00:09:06.826  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@878828e)
+11-07 00:09:06.827  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@878828e)
+11-07 00:09:07.826  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@aeb0aaf)
+11-07 00:09:07.827  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@aeb0aaf)
+11-07 00:09:08.469  1738  1974 E SurfaceFlinger: ro.sf.lcd_density must be defined as a build property
+11-07 00:09:08.469  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+11-07 00:09:08.478  5527  5527 D HostConnection: createUnique: call
+11-07 00:09:08.478  5527  5527 D HostConnection: HostConnection::get() New Host Connection established 0x794f96841640, tid 5527
+11-07 00:09:08.480  5527  5527 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_YUV420_888_to_NV21 ANDROID_EMU_YUV_Cache ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-07 00:09:08.480  5527  5527 E eglCodecCommon: GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-07 00:09:08.599  5531  5531 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:08.619  5531  5531 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:08.620  5531  5531 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:08.628  5531  5531 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:08.629  5531  5531 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=167803, downTime=167803, deviceId=-1, source=0x101 }
+11-07 00:09:08.632  5531  5531 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=167803, downTime=167803, deviceId=-1, source=0x101 }
+11-07 00:09:08.632  1896  1913 D AutofillManagerService: onBackKeyPressed()
+11-07 00:09:08.633  5531  5531 D AndroidRuntime: Shutting down VM
+11-07 00:09:08.650  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:09:08.745  5541  5541 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:08.793  5541  5541 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:08.793  5541  5541 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:08.812  5541  5541 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:08.812  5541  5541 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=167987, downTime=167987, deviceId=-1, source=0x101 }
+11-07 00:09:08.832  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@fbc5aa8)
+11-07 00:09:08.833  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@fbc5aa8)
+11-07 00:09:08.866  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:09:08.866  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:09:08.872  5541  5541 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=167987, downTime=167987, deviceId=-1, source=0x101 }
+11-07 00:09:08.878  1587  5264 W audio_hw_generic: Not supplying enough data to HAL, expected position 777797 , only wrote 777600
+11-07 00:09:08.879  5541  5541 D AndroidRuntime: Shutting down VM
+11-07 00:09:08.940  3684  3684 W StaticLayout: maxLineHeight should not be -1.  maxLines:1 lineCount:1
+11-07 00:09:08.942  3684  3684 W StaticLayout: maxLineHeight should not be -1.  maxLines:1 lineCount:1
+11-07 00:09:09.828  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4f65566)
+11-07 00:09:09.828  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4f65566)
+11-07 00:09:10.296  1896  2098 E memtrack: Couldn't load memtrack module
+11-07 00:09:10.296  1896  2098 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:09:10.828  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@dcba0a7)
+11-07 00:09:10.828  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@dcba0a7)
+11-07 00:09:11.758  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:09:11.758  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:09:11.765  2402  5553 I Vision  : Requesting optional module download of ocr.
+11-07 00:09:11.765  2402  5553 I Vision  : Exceeded maximum feature download tries for ocr
+11-07 00:09:11.765  2402  5553 W Vision  : Request of optional module download of ocr failed.
+11-07 00:09:11.766  2402  5553 I Vision  : Checking for download completion for 180940 -- ocr
+11-07 00:09:11.828  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@38261f2)
+11-07 00:09:11.828  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@38261f2)
+11-07 00:09:12.088  1587  1660 W audio_hw_generic: Not supplying enough data to HAL, expected position 1083830 , only wrote 931680
+11-07 00:09:12.828  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b87a043)
+11-07 00:09:12.829  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b87a043)
+11-07 00:09:13.829  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@265d6c0)
+11-07 00:09:13.829  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@265d6c0)
+11-07 00:09:14.830  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@54b1ff9)
+11-07 00:09:14.831  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@54b1ff9)
+11-07 00:09:15.356  1896  2296 I ActivityManager: Killing 4185:com.google.android.apps.maps/u0a51 (adj 906): empty #17
+11-07 00:09:15.357  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:09:15.357  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:09:15.361  1896  1915 W libprocessgroup: kill(-4185, 9) failed: No such process
+11-07 00:09:15.396  1896  4007 D ConnectivityService: ConnectivityService NetworkRequestInfo binderDied(NetworkRequest [ TRACK_DEFAULT id=19, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Unwanted:  Uid: 10051] ], android.os.BinderProxy@850ab3e)
+11-07 00:09:15.396  1896  3275 D ConnectivityService: ConnectivityService NetworkRequestInfo binderDied(NetworkRequest [ LISTEN id=20, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Unwanted:  Uid: 10051] ], android.os.BinderProxy@e79fd9f)
+11-07 00:09:15.396  1739  1739 I Zygote  : Process 4185 exited due to signal (9)
+11-07 00:09:15.396  1896  2029 D ConnectivityService: releasing NetworkRequest [ TRACK_DEFAULT id=19, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Unwanted:  Uid: 10051] ] (release request)
+11-07 00:09:15.404  1762  1778 D hwcomposer: hw_composer sent 84 syncs in 78s
+11-07 00:09:15.405  1896  1915 W libprocessgroup: kill(-4185, 9) failed: No such process
+11-07 00:09:15.405  1896  1915 I libprocessgroup: Successfully killed process cgroup uid 10051 pid 4185 in 44ms
+11-07 00:09:15.829  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@d319eec)
+11-07 00:09:15.829  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@d319eec)
+11-07 00:09:16.829  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@314c2b5)
+11-07 00:09:16.829  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@314c2b5)
+11-07 00:09:16.857  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:09:16.857  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+--
+11-07 00:09:21.056  5561  5561 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:21.075  5561  5561 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:21.076  5561  5561 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:21.085  5561  5561 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:21.085  5561  5561 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=180260, downTime=180260, deviceId=-1, source=0x101 }
+11-07 00:09:21.089  5561  5561 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=180260, downTime=180260, deviceId=-1, source=0x101 }
+11-07 00:09:21.091  5561  5561 D AndroidRuntime: Shutting down VM
+11-07 00:09:21.093  1587  5264 W audio_hw_generic: Not supplying enough data to HAL, expected position 931844 , only wrote 931680
+11-07 00:09:21.093  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:09:21.105  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:09:21.264  5571  5571 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:21.298  5571  5571 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:21.298  5571  5571 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:21.313  5571  5571 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:21.313  5571  5571 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=180488, downTime=180488, deviceId=-1, source=0x101 }
+11-07 00:09:21.341  5571  5571 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=180488, downTime=180488, deviceId=-1, source=0x101 }
+11-07 00:09:21.366  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:09:21.366  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:09:21.426  5571  5571 D AndroidRuntime: Shutting down VM
+11-07 00:09:21.777  1896  1911 E memtrack: Couldn't load memtrack module
+11-07 00:09:21.777  1896  1911 W android.os.Debug: failed to get memory consumption info: -1
+11-07 00:09:21.803  2402  5585 I Vision  : Requesting optional module download of ocr.
+11-07 00:09:21.835  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e932ba2)
+11-07 00:09:21.843  2402  5585 I Vision  : Checking for download completion for 191017 -- ocr
+11-07 00:09:21.844  2402  5585 I ChimeraConfigurator: Starting update, reason: 4 urgentFeatures: vision.ocr:-1
+11-07 00:09:21.903  5581  5581 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:21.965  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e932ba2)
+11-07 00:09:21.986  5581  5581 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:21.987  5581  5581 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:22.003  5581  5581 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:22.004  5581  5581 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_CENTER, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=181178, downTime=181178, deviceId=-1, source=0x101 }
+11-07 00:09:22.054  5581  5581 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_CENTER, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=181178, downTime=181178, deviceId=-1, source=0x101 }
+11-07 00:09:22.069  5581  5581 D AndroidRuntime: Shutting down VM
+11-07 00:09:22.127  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:09:22.127  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:09:22.312  2054  3410 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-07 00:09:22.312  2054  3410 W Conscrypt: 	at com.google.android.gms.org.conscrypt.Platform.setSocketWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):2)
+11-07 00:09:22.312  2054  3410 W Conscrypt: 	at com.google.android.gms.org.conscrypt.ConscryptFileDescriptorSocket.setSoWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):0)
+11-07 00:09:22.343  2054  3410 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-07 00:09:22.343  2054  3410 W Conscrypt: 	at com.google.android.gms.org.conscrypt.Platform.setSocketWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):2)
+11-07 00:09:22.343  2054  3410 W Conscrypt: 	at com.google.android.gms.org.conscrypt.ConscryptFileDescriptorSocket.setSoWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):0)
+11-07 00:09:22.486  3684  3684 W StaticLayout: maxLineHeight should not be -1.  maxLines:1 lineCount:1
+11-07 00:09:22.497  3684  3684 W StaticLayout: maxLineHeight should not be -1.  maxLines:1 lineCount:1
+11-07 00:09:22.532  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 241664
+11-07 00:09:22.561  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 241664
+11-07 00:09:22.562  1597  2335 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 241664
+11-07 00:09:22.564  1597  2335 I chatty  : uid=1000(system) HwBinder:1597_2 identical 1 line
+11-07 00:09:22.566  1597  2335 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 241664
+11-07 00:09:22.596  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 241664
+11-07 00:09:22.647  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 241664
+11-07 00:09:22.696  3684  3700 I app.iptvplus.t: Background concurrent copying GC freed 89067(3MB) AllocSpace objects, 17(1060KB) LOS objects, 49% free, 5MB/11MB, paused 2.148ms total 191.636ms
+11-07 00:09:22.761  3636  3636 D BugleDataModel: ActionExecutor Empty Service started
+11-07 00:09:22.781  3636  3636 D BugleDataModel: ActionExecutor Empty Service destroyed
+11-07 00:09:22.829  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1cb31b4)
+11-07 00:09:22.830  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1cb31b4)
+11-07 00:09:23.013  2572  2572 I BgTaskExecutorImpl: Starting EXCLUSIVE background task fetch_configs_from_phenotype.
+11-07 00:09:23.015  2054  3410 I aopq    : Scheduling Phenotype for a PhenotypeSyncImmediately(13, com.google.android.gms) one off with window [1, 2] in seconds [CONTEXT service_id=51 ]
+11-07 00:09:23.015  2572  2572 W SearchService: Abort, client detached.
+11-07 00:09:23.018  2768  2768 I PhenotypeUpdate: onReceive() urgent = false
+11-07 00:09:23.049  2054  5609 I Auth    : [AuthManaged,PasswordComplexityHelperImpl] Updating password complexity components state.
+11-07 00:09:23.049  2054  5609 I Auth    : [AuthManaged,PasswordComplexityHelperImpl] Disabling com.google.android.gms.auth.managed.admin.DeviceAdminReceiver
+11-07 00:09:23.049  2054  5609 I Auth    : [AuthManaged,PasswordComplexityHelperImpl] Disabling com.google.android.gms.auth.managed.ui.SetNewPasswordActivity
+11-07 00:09:23.055  2054  5607 I aorp    : updateFromConfigurations using legacy put method [CONTEXT service_id=204 ]
+11-07 00:09:23.056  1896  1896 V SettingsProvider: Notifying for 0: content://settings/global/phenotype_test_setting
+11-07 00:09:23.085  2572  2865 W PhenotypeToGsaConfigs: Can't format flag AndroidGsaVelourJars__velour_birthdaydoodle_jar__name to integer.
+11-07 00:09:23.085  2572  2865 W PhenotypeToGsaConfigs: Can't format flag AndroidGsaVelourJars__velour_call_jar__name to integer.
+11-07 00:09:23.085  2572  2865 W PhenotypeToGsaConfigs: Can't format flag AndroidGsaVelourJars__velour_canvas_jar__name to integer.
+11-07 00:09:23.085  2572  2865 W PhenotypeToGsaConfigs: Can't format flag AndroidGsaVelourJars__velour_chkpkg_jar__name to integer.
+11-07 00:09:23.086  2572  2865 W PhenotypeToGsaConfigs: Can't format flag AndroidGsaVelourJars__velour_crashtest_jar__name to integer.
+11-07 00:09:23.086  2572  2865 W PhenotypeToGsaConfigs: Can't format flag AndroidGsaVelourJars__velour_dining_jar__name to integer.
+11-07 00:09:23.086  2572  2865 W PhenotypeToGsaConfigs: Can't format flag AndroidGsaVelourJars__velour_doodle_notifications_jar__name to integer.
+11-07 00:09:23.086  2572  2865 W PhenotypeToGsaConfigs: Can't format flag AndroidGsaVelourJars__velour_imageviewer_jar__name to integer.
+11-07 00:09:23.086  2572  2865 W PhenotypeToGsaConfigs: Can't format flag AndroidGsaVelourJars__velour_ipa_jar__name to integer.
+--
+11-07 00:09:28.281  5623  5623 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:28.301  5623  5623 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:28.301  5623  5623 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:28.310  5623  5623 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:28.311  5623  5623 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=187485, downTime=187485, deviceId=-1, source=0x101 }
+11-07 00:09:28.315  5623  5623 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=187485, downTime=187485, deviceId=-1, source=0x101 }
+11-07 00:09:28.316  5623  5623 D AndroidRuntime: Shutting down VM
+11-07 00:09:28.319  1587  5264 W audio_hw_generic: Not supplying enough data to HAL, expected position 1131287 , only wrote 1131120
+11-07 00:09:28.327  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:09:28.327  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:09:28.841  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@bc2c5fe)
+11-07 00:09:28.842  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@bc2c5fe)
+11-07 00:09:29.832  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@ab5e15f)
+11-07 00:09:29.832  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@ab5e15f)
+11-07 00:09:30.832  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@89617ac)
+11-07 00:09:30.832  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@89617ac)
+11-07 00:09:31.351  1738  1974 E SurfaceFlinger: ro.sf.lcd_density must be defined as a build property
+11-07 00:09:31.351  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+11-07 00:09:31.361  5635  5635 D HostConnection: createUnique: call
+11-07 00:09:31.362  5635  5635 D HostConnection: HostConnection::get() New Host Connection established 0x782c72041640, tid 5635
+11-07 00:09:31.363  5635  5635 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_YUV420_888_to_NV21 ANDROID_EMU_YUV_Cache ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-07 00:09:31.363  5635  5635 E eglCodecCommon: GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-07 00:09:31.486  5639  5639 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:31.506  5639  5639 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:31.507  5639  5639 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:31.515  5639  5639 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:31.516  5639  5639 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=190690, downTime=190690, deviceId=-1, source=0x101 }
+11-07 00:09:31.521  5639  5639 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=190690, downTime=190690, deviceId=-1, source=0x101 }
+11-07 00:09:31.521  5639  5639 D AndroidRuntime: Shutting down VM
+11-07 00:09:31.526  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:09:31.527  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:09:31.836  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@181347b)
+11-07 00:09:31.837  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@181347b)
+11-07 00:09:31.894  2402  5649 I Vision  : Requesting optional module download of ocr.
+11-07 00:09:31.894  2402  5649 I Vision  : Checking for download completion for 201069 -- ocr
+11-07 00:09:31.989  3684  3684 W StaticLayout: maxLineHeight should not be -1.  maxLines:1 lineCount:1
+11-07 00:09:31.992  3684  3684 W StaticLayout: maxLineHeight should not be -1.  maxLines:1 lineCount:1
+11-07 00:09:32.179  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 241664
+11-07 00:09:32.194  1597  2335 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 241664
+11-07 00:09:32.215  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 241664
+11-07 00:09:32.244  1597  2828 I chatty  : uid=1000(system) HwBinder:1597_3 identical 1 line
+11-07 00:09:32.249  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 241664
+11-07 00:09:32.301  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 925696
+11-07 00:09:32.342  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 241664
+11-07 00:09:32.346  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 241664
+11-07 00:09:32.833  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@93283e3)
+11-07 00:09:32.837  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@93283e3)
+11-07 00:09:32.920  2054  2982 W GLSUser : [AppCertManager] Failed to get security token.
+11-07 00:09:32.920  2054  2982 W GLSUser : java.io.IOException: Invalid scope
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at adiw.b(:com.google.android.gms@202414023@20.24.14 (040800-319035315):23)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at adiw.a(:com.google.android.gms@202414023@20.24.14 (040800-319035315):18)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at adiw.a(:com.google.android.gms@202414023@20.24.14 (040800-319035315):11)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at hwy.a(:com.google.android.gms@202414023@20.24.14 (040800-319035315):17)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at hww.a(:com.google.android.gms@202414023@20.24.14 (040800-319035315):45)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at hwr.a(:com.google.android.gms@202414023@20.24.14 (040800-319035315):0)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at hwu.a(:com.google.android.gms@202414023@20.24.14 (040800-319035315):10)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at gbi.call(:com.google.android.gms@202414023@20.24.14 (040800-319035315):0)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at soy.b(:com.google.android.gms@202414023@20.24.14 (040800-319035315):12)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at soy.run(:com.google.android.gms@202414023@20.24.14 (040800-319035315):7)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at sux.run(:com.google.android.gms@202414023@20.24.14 (040800-319035315):0)
+11-07 00:09:32.920  2054  2982 W GLSUser : 	at java.lang.Thread.run(Thread.java:764)
+11-07 00:09:32.943  2054  2982 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-07 00:09:32.943  2054  2982 W Conscrypt: 	at com.google.android.gms.org.conscrypt.Platform.setSocketWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):2)
+11-07 00:09:32.943  2054  2982 W Conscrypt: 	at com.google.android.gms.org.conscrypt.ConscryptFileDescriptorSocket.setSoWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):0)
+11-07 00:09:32.956  2054  2982 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-07 00:09:32.956  2054  2982 W Conscrypt: 	at com.google.android.gms.org.conscrypt.Platform.setSocketWriteTimeout(:com.google.android.gms@202414023@20.24.14 (040800-319035315):2)
+--
+11-07 00:09:34.709  5663  5663 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:34.725  1587  1660 W audio_hw_generic: Not supplying enough data to HAL, expected position 1744008 , only wrote 1438560
+11-07 00:09:34.731  5663  5663 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:34.732  5663  5663 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:34.741  5663  5663 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:34.741  5663  5663 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=193915, downTime=193915, deviceId=-1, source=0x101 }
+11-07 00:09:34.745  5663  5663 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=193915, downTime=193915, deviceId=-1, source=0x101 }
+11-07 00:09:34.745  1896  1913 D AutofillManagerService: onBackKeyPressed()
+11-07 00:09:34.746  5663  5663 D AndroidRuntime: Shutting down VM
+11-07 00:09:34.750  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:09:34.751  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:09:34.855  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c6b8f6a)
+11-07 00:09:34.855  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c6b8f6a)
+11-07 00:09:34.942  5673  5673 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:34.998  5673  5673 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:35.001  5673  5673 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:35.070  5673  5673 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:35.070  5673  5673 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=194245, downTime=194245, deviceId=-1, source=0x101 }
+11-07 00:09:35.108  5673  5673 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=194245, downTime=194245, deviceId=-1, source=0x101 }
+11-07 00:09:35.109  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:09:35.110  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:09:35.207  5673  5673 D AndroidRuntime: Shutting down VM
+11-07 00:09:35.388  5683  5683 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:35.458  5683  5683 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:35.459  5683  5683 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:35.477  5683  5683 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:35.477  5683  5683 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=194652, downTime=194652, deviceId=-1, source=0x101 }
+11-07 00:09:35.515  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:09:35.522  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:09:35.531  5683  5683 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=194652, downTime=194652, deviceId=-1, source=0x101 }
+11-07 00:09:35.533  1587  5264 W audio_hw_generic: Not supplying enough data to HAL, expected position 1438756 , only wrote 1438560
+11-07 00:09:35.597  5683  5683 D AndroidRuntime: Shutting down VM
+11-07 00:09:35.833  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e2b3836)
+11-07 00:09:35.833  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e2b3836)
+11-07 00:09:36.833  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@34b9337)
+11-07 00:09:36.833  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@34b9337)
+11-07 00:09:37.833  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@192a0a4)
+11-07 00:09:37.834  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@192a0a4)
+11-07 00:09:38.743  1587  1660 W audio_hw_generic: Not supplying enough data to HAL, expected position 1744795 , only wrote 1592640
+11-07 00:09:38.833  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b388e0d)
+11-07 00:09:38.834  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b388e0d)
+11-07 00:09:39.241  3276  3982 I Dialer  : VvmTaskExecutor - executing task com.android.voicemail.impl.ActivationTask@7b8dd25
+11-07 00:09:39.241  3276  3982 I Dialer  : PreOMigrationHandler - ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} already migrated
+11-07 00:09:39.267  3007  3832 I VoicemailNotifier: receivers for android.intent.action.PROVIDER_CHANGED :[]
+11-07 00:09:39.268  3276  3982 I Dialer  : VvmActivationTask - VVM content provider configured - vvm_type_cvvm
+11-07 00:09:39.268  3276  3982 I Dialer  : OmtpVvmCarrierCfgHlpr - OmtpEvent:CONFIG_ACTIVATING
+11-07 00:09:39.272  3007  3832 I VoicemailNotifier: receivers for android.intent.action.PROVIDER_CHANGED :[]
+11-07 00:09:39.833  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@487603c)
+11-07 00:09:39.833  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@487603c)
+11-07 00:09:40.833  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@75e71c5)
+11-07 00:09:40.834  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@75e71c5)
+11-07 00:09:41.834  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@d3ea71a)
+11-07 00:09:41.834  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@d3ea71a)
+11-07 00:09:41.898  2402  5694 I Vision  : Requesting optional module download of ocr.
+11-07 00:09:41.898  2402  5694 I Vision  : Checking for download completion for 211073 -- ocr
+11-07 00:09:42.834  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@5884428)
+11-07 00:09:42.834  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@5884428)
+11-07 00:09:43.644  1738  1974 E SurfaceFlinger: ro.sf.lcd_density must be defined as a build property
+11-07 00:09:43.644  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+11-07 00:09:43.653  5697  5697 D HostConnection: createUnique: call
+11-07 00:09:43.653  5697  5697 D HostConnection: HostConnection::get() New Host Connection established 0x776c97841640, tid 5697
+11-07 00:09:43.655  5697  5697 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_YUV420_888_to_NV21 ANDROID_EMU_YUV_Cache ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-07 00:09:43.655  5697  5697 E eglCodecCommon: GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-07 00:09:43.786  5701  5701 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:43.806  5701  5701 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:43.807  5701  5701 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:43.816  5701  5701 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:43.817  5701  5701 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=202991, downTime=202991, deviceId=-1, source=0x101 }
+11-07 00:09:43.821  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:09:43.821  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:09:43.834  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@3101ae6)
+11-07 00:09:43.834  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@3101ae6)
+11-07 00:09:43.839  5701  5701 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=202991, downTime=202991, deviceId=-1, source=0x101 }
+11-07 00:09:43.843  3684  3684 W StaticLayout: maxLineHeight should not be -1.  maxLines:1 lineCount:1
+11-07 00:09:43.848  3684  3684 I chatty  : uid=10086(app.iptvplus.tv) identical 5 lines
+11-07 00:09:43.849  3684  3684 W StaticLayout: maxLineHeight should not be -1.  maxLines:1 lineCount:1
+11-07 00:09:43.857  1587  5264 W audio_hw_generic: Not supplying enough data to HAL, expected position 1592917 , only wrote 1592640
+11-07 00:09:43.889  5701  5701 D AndroidRuntime: Shutting down VM
+11-07 00:09:43.907  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 32768
+11-07 00:09:43.937  1597  2828 I chatty  : uid=1000(system) HwBinder:1597_3 identical 2 lines
+11-07 00:09:43.947  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 32768
+11-07 00:09:43.958  3684  3684 W StaticLayout: maxLineHeight should not be -1.  maxLines:1 lineCount:1
+11-07 00:09:43.968  3684  3684 I chatty  : uid=10086(app.iptvplus.tv) identical 2 lines
+11-07 00:09:43.968  3684  3684 W StaticLayout: maxLineHeight should not be -1.  maxLines:1 lineCount:1
+11-07 00:09:44.834  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@9f1b827)
+11-07 00:09:44.834  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@9f1b827)
+11-07 00:09:45.834  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@7317ad4)
+11-07 00:09:45.834  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@7317ad4)
+11-07 00:09:46.834  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@776147d)
+11-07 00:09:46.834  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@776147d)
+11-07 00:09:47.083  1587  1660 W audio_hw_generic: Not supplying enough data to HAL, expected position 1900181 , only wrote 1747440
+11-07 00:09:47.834  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@d32ff72)
+11-07 00:09:47.835  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@d32ff72)
+11-07 00:09:47.947  1738  2334 E SurfaceFlinger: ro.sf.lcd_density must be defined as a build property
+11-07 00:09:47.947  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+11-07 00:09:47.954  5714  5714 D HostConnection: createUnique: call
+11-07 00:09:47.954  5714  5714 D HostConnection: HostConnection::get() New Host Connection established 0x714124041640, tid 5714
+11-07 00:09:47.956  5714  5714 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_YUV420_888_to_NV21 ANDROID_EMU_YUV_Cache ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-07 00:09:47.956  5714  5714 E eglCodecCommon: GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-07 00:09:48.073  5718  5718 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-07 00:09:48.092  5718  5718 W app_process: Unexpected CPU variant for X86 using defaults: x86_64
+11-07 00:09:48.093  5718  5718 I app_process: The ClassLoaderContext is a special shared library.
+11-07 00:09:48.101  5718  5718 D AndroidRuntime: Calling main entry com.android.commands.input.Input
+11-07 00:09:48.103  5718  5718 I Input   : injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=207276, downTime=207276, deviceId=-1, source=0x101 }
+11-07 00:09:48.106  2768  2768 I GoogleInputMethod: onFinishInput() : Dummy InputConnection bound
+11-07 00:09:48.106  2768  2768 I GoogleInputMethod: onStartInput() : Dummy InputConnection bound
+11-07 00:09:48.108  5718  5718 I Input   : injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=207276, downTime=207276, deviceId=-1, source=0x101 }
+11-07 00:09:48.109  5718  5718 D AndroidRuntime: Shutting down VM
+11-07 00:09:48.113  1587  5264 W audio_hw_generic: Not supplying enough data to HAL, expected position 1747604 , only wrote 1747440
+11-07 00:09:48.835  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@5957040)
+11-07 00:09:48.835  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@5957040)
+11-07 00:09:48.946  1848  1848 E netmgr  : Failed to open QEMU pipe 'qemud:network': Invalid argument
+11-07 00:09:48.946  1848  1848 E netmgr  : WifiForwarder unable to open QEMU pipe: Invalid argument
+11-07 00:09:49.835  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a547b79)
+11-07 00:09:49.835  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a547b79)
+11-07 00:09:35.111  1896  1913 D AutofillManagerService: onBackKeyPressed()
+11-07 00:09:50.732  1752  1799 E storaged: getDiskStats failed with result NOT_SUPPORTED and size 0
+11-07 00:09:50.835  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c2da0be)
+11-07 00:09:50.835  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c2da0be)
+11-07 00:09:51.323  1587  1660 W audio_hw_generic: Not supplying enough data to HAL, expected position 2053628 , only wrote 1901520
+11-07 00:09:51.835  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@75b851f)
+11-07 00:09:51.835  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@75b851f)
+11-07 00:09:51.901  2402  5728 I Vision  : Requesting optional module download of ocr.
+11-07 00:09:51.901  2402  5728 I Vision  : Checking for download completion for 221076 -- ocr
+11-07 00:09:52.144  1738  2334 E SurfaceFlinger: ro.sf.lcd_density must be defined as a build property
+11-07 00:09:52.145  1597  2828 D gralloc_ranchu: gralloc_alloc: Creating ashmem region of size 8298496
+11-07 00:09:52.154  5731  5731 D HostConnection: createUnique: call
+11-07 00:09:52.154  5731  5731 D HostConnection: HostConnection::get() New Host Connection established 0x7f838fa41640, tid 5731
+11-07 00:09:52.156  5731  5731 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_YUV420_888_to_NV21 ANDROID_EMU_YUV_Cache ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-07 00:09:52.156  5731  5731 E eglCodecCommon: GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-07 00:09:52.835  1896  2043 I GnssLocationProvider: WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@2185635)
+11-07 00:09:52.835  1896  1911 I GnssLocationProvider: WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@2185635)
