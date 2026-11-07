@@ -457,13 +457,22 @@ class MainActivity : AppCompatActivity() {
         keepNavFocus = keepFocus
         section = s
         listKind = null
+        // kleines Vorschaubild gehört zu Live TV / TV-Programm
+        if (mode == Mode.MINI && s != Section.LIVE && s != Section.EPG) stopPlayer()
         if (detailPage.visibility == View.VISIBLE) closeDetail(restoreFocus = false)
         highlightNav()
         loadJob?.cancel()
         searchJob?.cancel()
         search.setText("")
         when (s) {
-            Section.HOME, Section.LIVE, Section.MOVIE, Section.SERIES -> { showPage(Page.SHELVES); loadShelves(s) }
+            Section.HOME, Section.MOVIE, Section.SERIES -> { showPage(Page.SHELVES); loadShelves(s) }
+            // Live TV wie früher: Kategorien links, Senderliste rechts, Vorschau im kleinen Fenster
+            Section.LIVE -> {
+                listKind = Kind.LIVE
+                showPage(Page.LIST)
+                setListMode(withCats = true, withSearch = true, withSettings = false)
+                loadCategories(Kind.LIVE, null, focusList = !keepFocus)
+            }
             Section.EPG -> { showPage(Page.LIST); setListMode(withCats = true, withSearch = false, withSettings = false); showEpgSection() }
             Section.SEARCH -> {
                 showPage(Page.SEARCH)
@@ -811,7 +820,7 @@ class MainActivity : AppCompatActivity() {
         itemsAdapter.submit(rows)
     }
 
-    private fun loadCategories(k: Kind, preselect: String? = null) {
+    private fun loadCategories(k: Kind, preselect: String? = null, focusList: Boolean = true) {
         catsAdapter.submit(listOf(Row("Wird geladen…")))
         submitItems(emptyList())
         header.text = ""
@@ -825,7 +834,7 @@ class MainActivity : AppCompatActivity() {
                 catsAdapter.submit(list.map { Row(clean(it.name), bold = it.id.isEmpty(), payload = it) })
                 val idx = list.indexOfFirst { it.id == preselect }.takeIf { it >= 0 } ?: (if (list.size > 1) 1 else 0)
                 onCategory(idx, catsAdapter.rows[idx], moveFocus = preselect != null)
-                if (preselect == null) catsView.post { catsView.getChildAt(0)?.requestFocus() }
+                if (preselect == null) { if (focusList) catsView.post { catsView.getChildAt(0)?.requestFocus() } }
                 else (catsView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(idx, dp(40))
             } catch (e: Exception) {
                 catsAdapter.submit(listOf(Row("Fehler: ${e.message}")))
@@ -1967,7 +1976,7 @@ class MainActivity : AppCompatActivity() {
     /** Zurück-Taste außerhalb des Players */
     private fun handleBack(): Boolean {
         if (detailPage.visibility == View.VISIBLE) { closeDetail(); return true }
-        if (listKind != null && page == Page.LIST) {
+        if (listKind != null && page == Page.LIST && section != Section.LIVE) {
             listKind = null
             showSection(section)
             return true
