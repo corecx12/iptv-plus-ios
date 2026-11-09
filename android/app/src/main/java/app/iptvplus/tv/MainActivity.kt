@@ -989,7 +989,13 @@ class MainActivity : AppCompatActivity() {
         })
         onSubmit(globalSearch) { submitGlobalSearch() }
         // Cursor ans Ende, damit Löschen/Weitertippen beim erneuten Öffnen sofort passt
-        globalSearch.setOnFocusChangeListener { _, has -> if (has) globalSearch.post { globalSearch.setSelection(globalSearch.text.length) } }
+        val toEnd = Runnable { globalSearch.setSelection(globalSearch.text.length) }
+        globalSearch.setOnFocusChangeListener { _, has -> if (has) globalSearch.postDelayed(toEnd, 80) }
+        // beim Öffnen der Tastatur (OK-Taste) ebenfalls ans Ende
+        globalSearch.setOnKeyListener { _, code, ev ->
+            if ((code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER) && ev.action == KeyEvent.ACTION_UP) globalSearch.postDelayed(toEnd, 80)
+            false
+        }
     }
 
     private fun submitGlobalSearch() {
