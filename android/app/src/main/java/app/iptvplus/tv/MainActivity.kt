@@ -271,6 +271,8 @@ class MainActivity : AppCompatActivity() {
             } else {
                 showSection(Section.HOME)
                 lifecycleScope.launch { repo.refreshUserInfo(); loadEpg(false) }
+                // Serien & Filme für die Suche im Hintergrund vorladen (nach der Startseite)
+                lifecycleScope.launch { delay(6000); repo.prefetchSearch() }
             }
         }
         // nach einem Absturz zuerst den Bericht zeigen und erst danach laden
@@ -1014,30 +1016,42 @@ class MainActivity : AppCompatActivity() {
             if (!now) delay(450)
             searchMsg.text = "Suche „$q“…"
             val errors = ArrayList<String>()
-            suspend fun part(k: Kind): List<Item> = try {
-                repo.search(k, q).take(40)
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                errors.add(e.message ?: "Fehler"); emptyList()
+            // Ergebnisse je Bereich, sobald sie da sind (Serien warten nicht auf Filme)
+            val found = linkedMapOf<Kind, List<Item>?>(Kind.MOVIE to null, Kind.SERIES to null, Kind.LIVE to null)
+            var focused = false
+            fun show(final: Boolean) {
+                val shelves = listOf(
+                    Shelf("Filme", CardStyle.POSTER, (found[Kind.MOVIE] ?: emptyList()).map { posterCard(Kind.MOVIE, it) }),
+                    Shelf("Serien", CardStyle.POSTER, (found[Kind.SERIES] ?: emptyList()).map { posterCard(Kind.SERIES, it) }),
+                    Shelf("Sender", CardStyle.CHANNEL, (found[Kind.LIVE] ?: emptyList()).map { channelCard(it) })
+                ).filter { it.cards.isNotEmpty() }
+                searchAdapter.submit(shelves)
+                val status = repo.loadStatus.values.joinToString("  ·  ")
+                searchMsg.text = when {
+                    !final -> if (status.isNotEmpty()) "Suche „$q“… $status" else "Suche „$q“…"
+                    shelves.isNotEmpty() -> ""
+                    errors.isNotEmpty() -> "Suche nicht möglich: ${errors.first()}"
+                    else -> "Keine Treffer für „$q“." + if (repo.deOnly) " (nur deutsche Filme und Serien)" else ""
+                }
+                if (now && !focused && shelves.isNotEmpty() && (globalSearch.hasFocus() || currentFocus == null)) { focused = true; focusFirstSearchResult() }
             }
-            // Filme, Serien und Sender gleichzeitig laden/durchsuchen
-            val m = async { part(Kind.MOVIE) }
-            val se = async { part(Kind.SERIES) }
-            val l = async { part(Kind.LIVE) }
-            val movies = m.await(); val series = se.await(); val live = l.await()
-            val shelves = listOf(
-                Shelf("Filme", CardStyle.POSTER, movies.map { posterCard(Kind.MOVIE, it) }),
-                Shelf("Serien", CardStyle.POSTER, series.map { posterCard(Kind.SERIES, it) }),
-                Shelf("Sender", CardStyle.CHANNEL, live.map { channelCard(it) })
-            ).filter { it.cards.isNotEmpty() }
-            searchAdapter.submit(shelves)
-            searchMsg.text = when {
-                shelves.isNotEmpty() -> ""
-                errors.isNotEmpty() -> "Suche nicht möglich: ${errors.first()}"
-                else -> "Keine Treffer für „$q“." + if (repo.deOnly) " (nur deutsche Filme und Serien)" else ""
+            val ticker = launch { while (true) { delay(700); show(false) } }
+            val jobs = found.keys.toList().map { k ->
+                async {
+                    val r = try {
+                        repo.search(k, q).take(40)
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        errors.add(e.message ?: "Fehler"); emptyList()
+                    }
+                    found[k] = r
+                    show(false)
+                }
             }
-            if (now && shelves.isNotEmpty()) focusFirstSearchResult()
+            jobs.forEach { it.await() }
+            ticker.cancel()
+            show(true)
         }
     }
 

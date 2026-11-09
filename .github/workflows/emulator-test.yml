@@ -30,7 +30,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Testserver starten
-        run: NOFULL=1 MOVIES=120000 SERIES=20000 nohup python3 .github/test/mock_xtream.py 8080 > mock.log 2>&1 &
+        run: NOFULL=1 SLOW=0.3 MOVIES=120000 SERIES=20000 nohup python3 .github/test/mock_xtream.py 8080 > mock.log 2>&1 &
       - name: Emulator starten und App testen
         uses: reactivecircus/android-emulator-runner@v2
         with:

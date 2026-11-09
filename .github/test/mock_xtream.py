@@ -54,6 +54,10 @@ for j, t in enumerate(["DE: Harry Potter und der Stein der Weisen (2001)", "DE: 
                        "DE: Fluch der Karibik (2003)", "EN: Harry Potter and the Chamber of Secrets (2002)"]):
     movies[j * 7]["name"] = t
 series[0]["name"] = "DE: Haus des Geldes"; series[1]["name"] = "DE: Game of Thrones"
+# Serie ohne „DE“ im Titel in einer Kategorie ohne Länderkennung (wie bei vielen Anbietern)
+ser_cats.append({"category_id": "399", "category_name": "Serien | Krimi & Action", "parent_id": 0})
+series.append(dict(series[2], name="The Rookie", series_id=99999, category_id="399", category_ids=[399]))
+SLOW = float(__import__('os').environ.get('SLOW', '0'))
 
 def vod_info(i):
     return {"info": {"movie_image": img("poster", i % 80, 200, 300), "backdrop_path": [img("backdrop", i % 20, 640, 360)] if i % 2 else [],
@@ -102,6 +106,7 @@ class H(BaseHTTPRequestHandler):
         def flt(lst): return [x for x in lst if not cat or x["category_id"] == cat]
         # NOFULL=1: wie viele echte Anbieter – Gesamtliste ohne category_id wird verweigert
         if NOFULL and not cat and a in ("get_vod_streams", "get_series"): return self.send(b"[]")
+        if SLOW and cat: time.sleep(SLOW)
         if a is None:
             body = {"user_info": {"username": "test", "password": "test", "auth": 1, "status": "Active", "exp_date": str(NOW + 86400 * 90),
                                   "is_trial": "0", "active_cons": "0", "max_connections": "2", "allowed_output_formats": ["m3u8", "ts"]},
