@@ -24,7 +24,7 @@ shot() { sleep ${2:-4}; adb exec-out screencap -p > $OUT/$1.png; adb shell "pido
 key() { adb shell input keyevent $1; }
 shot 01_start 25
 shot 02_start_spaeter 20
-key KEYCODE_BACK; sleep 1; key KEYCODE_BACK; shot 03_reiter 3
+key KEYCODE_BACK; sleep 2; key KEYCODE_BACK; sleep 2; for i in 1 2 3 4 5 6 7 8; do key KEYCODE_DPAD_UP; done; shot 03_reiter 3
 key KEYCODE_DPAD_RIGHT; shot 04_serien 15
 key KEYCODE_DPAD_RIGHT; shot 05_filme 15
 key KEYCODE_DPAD_DOWN; key KEYCODE_DPAD_DOWN; shot 05b_filme_reihe 4
