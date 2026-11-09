@@ -576,6 +576,9 @@ class MainActivity : AppCompatActivity() {
         shelfAdapter.submit(emptyList())
         heroEnabled = s != Section.LIVE
         heroCard = null
+        // verzögertes Titelbild der vorherigen Seite verwerfen
+        ui.removeCallbacks(heroRunnable)
+        heroPending = null
         shelvesView.setPadding(0, if (heroEnabled) heroTop() else dp(96), 0, dp(40))
         shelvesView.scrollToPosition(0)
         heroBackdrop.setImageDrawable(null)
@@ -609,6 +612,9 @@ class MainActivity : AppCompatActivity() {
                     else -> buildVod(kindOf(s), ::add)
                 }
                 if (first) {
+                    heroCard = null; heroPending = null
+                    heroKicker.text = ""; heroTitle.text = ""; heroMeta.text = ""; heroPlot.text = ""
+                    heroButtons.removeAllViews(); heroBackdrop.setImageDrawable(null)
                     shelvesMsg.text = if (s == Section.MYLIST) "Meine Liste ist noch leer.\n\nOK-Taste auf einem Film, einer Serie oder einem Sender lange gedrückt halten\n– oder auf der Detailseite „+ Meine Liste“ wählen."
                         else "Hier gibt es noch nichts zu sehen."
                     shelvesMsg.visibility = View.VISIBLE

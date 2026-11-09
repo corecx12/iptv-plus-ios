@@ -54,7 +54,7 @@ adb shell input text "the%srookie"; key KEYCODE_MEDIA_PLAY_PAUSE; shot 24_suche_
 adb shell input keyevent --longpress KEYCODE_DPAD_CENTER; shot 25_gemerkt 1
 key KEYCODE_BACK; sleep 1; key KEYCODE_DPAD_LEFT; key KEYCODE_DPAD_LEFT; shot 26_meine_liste 4
 key KEYCODE_DPAD_DOWN; shot 27_meine_liste_reihe 3
-key KEYCODE_DPAD_CENTER; shot 28_detail_aus_liste 6
+key KEYCODE_DPAD_DOWN; key KEYCODE_DPAD_CENTER; shot 28_detail_aus_liste 6
 adb logcat -d > $OUT/logcat.txt
 grep -E "FATAL EXCEPTION|AndroidRuntime|OutOfMemory|ANR in" -A 40 $OUT/logcat.txt > $OUT/crash.txt || true
 adb logcat -d -b crash > $OUT/crash_buffer.txt || true
