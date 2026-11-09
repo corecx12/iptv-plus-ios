@@ -42,7 +42,7 @@ key KEYCODE_BACK; key KEYCODE_BACK; key KEYCODE_DPAD_RIGHT; shot 17_programm 8
 key KEYCODE_DPAD_RIGHT; shot 18_suche 4
 key KEYCODE_DPAD_RIGHT; shot 19_einstellungen 4
 # Such-Test: Reiter „Suchen“, Titel mit Tippfehler eingeben, Play drücken
-key KEYCODE_DPAD_LEFT; shot 20_suche_reiter 3
+shot 20_suche_reiter 1
 key KEYCODE_DPAD_DOWN; shot 21_suchfeld 2
 key KEYCODE_DPAD_CENTER; sleep 2
 adb shell input text "hary%spoter"; shot 22_getippt 2
