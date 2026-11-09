@@ -1079,11 +1079,13 @@ class MainActivity : AppCompatActivity() {
         runGlobalSearch(globalSearch.text.toString(), now = true)
     }
 
-    private fun focusFirstSearchResult() {
-        searchShelves.post {
+    /** zum ersten Treffer springen – wartet, bis die Kachel wirklich gezeichnet ist */
+    private fun focusFirstSearchResult(tries: Int = 10) {
+        searchShelves.postDelayed({
             val row = searchShelves.findViewHolderForAdapterPosition(0) as? ShelfAdapter.VH
-            row?.rv?.getChildAt(0)?.requestFocus()
-        }
+            val v = row?.rv?.getChildAt(0)
+            if (v != null && v.isShown) v.requestFocus() else if (tries > 0 && page == Page.SEARCH) focusFirstSearchResult(tries - 1)
+        }, 100)
     }
 
     /** now = sofort suchen (Play/Suchen gedrückt) und danach zum ersten Treffer springen */
