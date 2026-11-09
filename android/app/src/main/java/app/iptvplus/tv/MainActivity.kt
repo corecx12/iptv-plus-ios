@@ -53,12 +53,15 @@ data class MoreLink(val kind: Kind, val catId: String)
 
 class MainActivity : AppCompatActivity() {
 
-    private enum class Section { HOME, LIVE, MOVIE, SERIES, EPG, SEARCH, SETTINGS }
+    private enum class Section { HOME, LIVE, MOVIE, SERIES, MYLIST, EPG, SEARCH, SETTINGS }
     private enum class Mode { NONE, FULL, MINI }
     private enum class Page { SHELVES, LIST, SEARCH }
 
     private lateinit var repo: Repo
     private lateinit var store: ResumeStore
+    private lateinit var favs: FavStore
+    /** OK lange gedrückt: Klick beim Loslassen nicht mehr auslösen */
+    private var longHandled = false
 
     // Kopfzeile
     private lateinit var topBar: View
@@ -180,6 +183,8 @@ class MainActivity : AppCompatActivity() {
         repo = Repo(this)
         store = ResumeStore(this)
         store.accountKey = repo.accountKey
+        favs = FavStore(this)
+        favs.accountKey = repo.accountKey
 
         topBar = findViewById(R.id.topBar)
         nav = findViewById(R.id.nav)
@@ -361,7 +366,7 @@ class MainActivity : AppCompatActivity() {
     // ---------------- Kopfzeile & Reiter ----------------
 
     private fun tabLabel(s: Section) = when (s) {
-        Section.HOME -> "Start"; Section.LIVE -> "Live TV"; Section.MOVIE -> "Filme"; Section.SERIES -> "Serien"
+        Section.HOME -> "Start"; Section.LIVE -> "Live TV"; Section.MOVIE -> "Filme"; Section.SERIES -> "Serien"; Section.MYLIST -> "Meine Liste"
         Section.EPG -> "TV-Programm"; Section.SEARCH -> "Suchen"; Section.SETTINGS -> "Einstellungen"
     }
 
@@ -382,7 +387,7 @@ class MainActivity : AppCompatActivity() {
     private fun buildNav() {
         nav.removeAllViews()
         navButtons.clear()
-        for (s in listOf(Section.HOME, Section.LIVE, Section.MOVIE, Section.SERIES, Section.EPG, Section.SEARCH, Section.SETTINGS)) {
+        for (s in listOf(Section.HOME, Section.LIVE, Section.MOVIE, Section.SERIES, Section.MYLIST, Section.EPG, Section.SEARCH, Section.SETTINGS)) {
             val icon = when (s) { Section.SEARCH -> R.drawable.ic_tab_search; Section.SETTINGS -> R.drawable.ic_tab_settings; else -> 0 }
             val b = TextView(this).apply {
                 isFocusable = true; isClickable = true
@@ -473,7 +478,7 @@ class MainActivity : AppCompatActivity() {
         globalQuery = ""
         search.setText("")
         when (s) {
-            Section.HOME, Section.MOVIE, Section.SERIES -> { showPage(Page.SHELVES); loadShelves(s) }
+            Section.HOME, Section.MOVIE, Section.SERIES, Section.MYLIST -> { showPage(Page.SHELVES); loadShelves(s) }
             // Live TV wie früher: Kategorien links, Senderliste rechts, Vorschau im kleinen Fenster
             Section.LIVE -> {
                 listKind = Kind.LIVE
@@ -497,7 +502,14 @@ class MainActivity : AppCompatActivity() {
     /** Abstand, ab dem die erste Reihe beginnt (darüber das große Titelbild) */
     private fun heroTop() = resources.displayMetrics.heightPixels - dp(214)
 
-    private fun posterCard(k: Kind, it: Item) = Card(clean(it.name), "", it.icon, payload = Pick(k, it))
+    /** Kachel; bei angefangenen Filmen/Serien mit Fortschrittsbalken und „noch … Min.“ */
+    private fun posterCard(k: Kind, it: Item): Card {
+        val r = when (k) { Kind.MOVIE -> store.get(Kind.MOVIE, it.id); Kind.SERIES -> store.lastOfSeries(it.id); else -> null }
+            ?: return Card(clean(it.name), "", it.icon, payload = Pick(k, it))
+        val ep = if (k == Kind.SERIES) "S${r.season} · F${r.episode}  ·  " else ""
+        return if (r.done) Card(clean(it.name), ep + "✓ gesehen", it.icon, payload = Pick(k, it))
+        else Card(clean(it.name), ep + "noch ${r.remainingMin} Min.", it.icon, (r.fraction * 1000).toInt(), Pick(k, it))
+    }
 
     private fun channelCard(it: Item): Card {
         val cur = repo.epgFor(it)?.current()
@@ -592,10 +604,15 @@ class MainActivity : AppCompatActivity() {
                 if (repo.account == null) throw ApiException("Noch kein Konto eingerichtet. Unter Einstellungen anmelden.")
                 when (s) {
                     Section.HOME -> buildHome(::add)
+                    Section.MYLIST -> buildMyList(::add)
                     Section.LIVE -> buildLive(::add)
                     else -> buildVod(kindOf(s), ::add)
                 }
-                if (first) { shelvesMsg.text = "Hier gibt es noch nichts zu sehen."; shelvesMsg.visibility = View.VISIBLE }
+                if (first) {
+                    shelvesMsg.text = if (s == Section.MYLIST) "Meine Liste ist noch leer.\n\nOK-Taste auf einem Film, einer Serie oder einem Sender lange gedrückt halten\n– oder auf der Detailseite „+ Meine Liste“ wählen."
+                        else "Hier gibt es noch nichts zu sehen."
+                    shelvesMsg.visibility = View.VISIBLE
+                }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: OutOfMemoryError) {
@@ -627,6 +644,57 @@ class MainActivity : AppCompatActivity() {
         // weitere Kategorien als Reihen
         for (c in mc.filter { reNew.containsMatchIn(it.name) }.drop(1).take(3)) add(lazyShelf(clean(c.name), Kind.MOVIE, c))
     }
+
+    /** Meine Liste: Weiterschauen, gemerkte Filme, Serien und Sender */
+    private fun buildMyList(add: (Shelf) -> Unit) {
+        continueShelf(null)?.let(add)
+        add(Shelf("Meine Filme", CardStyle.POSTER, favs.all(Kind.MOVIE).map { posterCard(Kind.MOVIE, it.toItem()) }))
+        add(Shelf("Meine Serien", CardStyle.POSTER, favs.all(Kind.SERIES).map { posterCard(Kind.SERIES, it.toItem()) }))
+        add(Shelf("Meine Sender", CardStyle.CHANNEL, favs.all(Kind.LIVE).map { channelCard(it.toItem()) }))
+    }
+
+    /** zu „Meine Liste“ hinzufügen bzw. entfernen */
+    private fun toggleFav(kind: Kind, item: Item) {
+        val added = favs.toggle(kind, item)
+        showBanner(if (added) "„${clean(item.name)}“ ist jetzt in Meiner Liste" else "„${clean(item.name)}“ aus Meiner Liste entfernt", false)
+        if (section == Section.MYLIST && page == Page.SHELVES && detailPage.visibility != View.VISIBLE) {
+            keepNavFocus = false
+            loadShelves(Section.MYLIST)
+        }
+    }
+
+    private fun favLabel(kind: Kind, item: Item) = if (favs.contains(kind, item.id)) "✓  Meine Liste" else "+  Meine Liste"
+
+    /** Taste „+ Meine Liste“ / „✓ Meine Liste“ */
+    private fun favPill(kind: Kind, item: Item): TextView {
+        val b = pill(favLabel(kind, item), false) {}
+        b.setOnClickListener { toggleFav(kind, item); b.text = favLabel(kind, item) }
+        return b
+    }
+
+    /** Film/Serie/Sender unter dem Fokus (für langes Drücken von OK bzw. Menü-Taste) */
+    private fun focusedPick(): Pick? {
+        val f = currentFocus ?: return null
+        if (heroButtons.findFocus() != null) {
+            return when (val p = heroCard?.payload) { is Pick -> p; is Resume -> resumePick(p); else -> null }
+        }
+        val rv = f.parent as? RecyclerView ?: return null
+        val pos = rv.getChildAdapterPosition(f)
+        if (pos < 0) return null
+        return when (val a = rv.adapter) {
+            is CardAdapter -> when (val p = a.cards.getOrNull(pos)?.payload) { is Pick -> p; is Resume -> resumePick(p); else -> null }
+            is RowAdapter -> if (rv !== itemsView) null else when (val p = a.rows.getOrNull(pos)?.payload) {
+                is Item -> Pick(listKind ?: kindOf(section), p)
+                is EpgChannel -> Pick(Kind.LIVE, Item(p.streamId, p.name, p.icon, "", "ts", p.num, "", "", ""))
+                else -> null
+            }
+            else -> null
+        }
+    }
+
+    private fun resumePick(r: Resume): Pick =
+        if (r.seriesId.isEmpty()) Pick(Kind.MOVIE, Item(r.id, r.title, r.icon, "", r.ext, 0, "", "", ""))
+        else Pick(Kind.SERIES, Item(r.seriesId, r.seriesName, r.seriesIcon, "", "", 0, "", "", ""))
 
     /** Filme/Serien: eine Reihe pro Kategorie, Inhalte laden erst beim Anzeigen */
     private suspend fun buildVod(k: Kind, add: (Shelf) -> Unit) {
@@ -717,18 +785,20 @@ class MainActivity : AppCompatActivity() {
                     heroPlot.text = cur?.d ?: ""
                     heroBackdrop.setImageDrawable(null)
                     heroButtons.addView(pill("Einschalten", true) { playLiveFull(it, liveListOfShelf(focusShelf)) })
+                    heroButtons.addView(favPill(Kind.LIVE, it))
                 } else {
                     heroKicker.text = if (p.kind == Kind.MOVIE) "Film" else "Serie"
                     heroMeta.text = listOf(it.year, if (it.rating.isEmpty() || it.rating == "0") "" else "★ ${it.rating.take(3).replace('.', ',')}").filter { s -> s.isNotEmpty() }.joinToString("  ·  ")
                     heroPlot.text = ""
                     heroBackdrop.load(it.icon) { crossfade(300) }
                     if (p.kind == Kind.MOVIE) {
-                        val r = store.get(Kind.MOVIE, it.id)
-                        heroButtons.addView(pill(if (r != null) "Fortsetzen" else "Abspielen", true) { playMovie(it, r?.pos ?: 0L) })
+                        val r = store.get(Kind.MOVIE, it.id)?.takeIf { x -> !x.done }
+                        heroButtons.addView(pill(if (r != null) "Fortsetzen ab ${fmt(r.pos)}" else "Abspielen", true) { playMovie(it, r?.pos ?: 0L) })
                     } else {
                         heroButtons.addView(pill("Ansehen", true) { openDetail(Kind.SERIES, it) })
                     }
                     heroButtons.addView(pill("Details", false) { openDetail(p.kind, it) })
+                    heroButtons.addView(favPill(p.kind, it))
                     lifecycleScope.launch {
                         val m = try { Meta.from(repo.info(p.kind, it.id)) } catch (e: Exception) { return@launch }
                         if (heroCard !== card) return@launch
@@ -742,10 +812,10 @@ class MainActivity : AppCompatActivity() {
                 val isEp = p.seriesId.isNotEmpty()
                 heroKicker.text = "Weiterschauen"
                 heroTitle.text = clean(if (isEp) p.seriesName else p.title)
-                heroMeta.text = (if (isEp) "Staffel ${p.season}, Folge ${p.episode}  ·  " else "") + "noch ${p.remainingMin} Min."
+                heroMeta.text = (if (isEp) "Staffel ${p.season}, Folge ${p.episode}  ·  " else "") + "bei ${fmt(p.pos)}  ·  noch ${p.remainingMin} Min."
                 heroPlot.text = ""
                 heroBackdrop.load(if (isEp) p.seriesIcon.ifEmpty { p.icon } else p.icon) { crossfade(300) }
-                heroButtons.addView(pill("Fortsetzen", true) { resumePlay(p) })
+                heroButtons.addView(pill("Fortsetzen ab ${fmt(p.pos)}", true) { resumePlay(p) })
                 val k = if (isEp) Kind.SERIES else Kind.MOVIE
                 val id = if (isEp) p.seriesId else p.id
                 val item = Item(id, if (isEp) p.seriesName else p.title, if (isEp) p.seriesIcon else p.icon, "", p.ext, 0, "", "", "")
@@ -781,8 +851,8 @@ class MainActivity : AppCompatActivity() {
 
     /** Weiterschauen-Reihe nach dem Ansehen aktualisieren, ohne die Seite neu aufzubauen */
     private fun refreshContinueShelf() {
-        if (page != Page.SHELVES || !(section == Section.HOME || section == Section.MOVIE || section == Section.SERIES)) return
-        val fresh = continueShelf(if (section == Section.HOME) null else kindOf(section))
+        if (page != Page.SHELVES || !(section == Section.HOME || section == Section.MOVIE || section == Section.SERIES || section == Section.MYLIST)) return
+        val fresh = continueShelf(if (section == Section.HOME || section == Section.MYLIST) null else kindOf(section))
         val list = shelfAdapter.shelves.toMutableList()
         val has = list.firstOrNull()?.title == "Weiterschauen"
         when {
@@ -896,6 +966,12 @@ class MainActivity : AppCompatActivity() {
             else Row(clean(it.name), icon = it.icon, payload = it)
         }
         val sub = listOf(it.year, if (it.rating.isEmpty() || it.rating == "0") "" else "★ ${it.rating}").filter { s -> s.isNotEmpty() }.joinToString(" · ")
+        val r = if (k == Kind.MOVIE) store.get(Kind.MOVIE, it.id) else store.lastOfSeries(it.id)
+        if (r != null) {
+            val ep = if (k == Kind.SERIES) "S${r.season} F${r.episode} · " else ""
+            return if (r.done) Row(clean(it.name), sub, ep + "✓ gesehen", icon = it.icon, poster = true, payload = it)
+            else Row(clean(it.name), sub, ep + "bei ${fmt(r.pos)} · noch ${r.remainingMin} Min.", icon = it.icon, progress = (r.fraction * 1000).toInt(), poster = true, payload = it)
+        }
         return Row(clean(it.name), sub, icon = it.icon, poster = true, payload = it)
     }
 
@@ -1162,7 +1238,12 @@ class MainActivity : AppCompatActivity() {
         val fallback = detailMetaData?.backdrop ?: detail?.item?.icon ?: ""
         episodesAdapter.submit(eps.map { ep ->
             val r = store.get(Kind.SERIES, ep.id)
-            Card("${ep.num}. ${ep.title}", ep.duration, ep.image.ifEmpty { fallback }, r?.let { (it.fraction * 1000).toInt() } ?: -1, ep)
+            val sub = when {
+                r == null -> ep.duration
+                r.done -> "✓ gesehen"
+                else -> "bei ${fmt(r.pos)}  ·  noch ${r.remainingMin} Min."
+            }
+            Card("${ep.num}. ${ep.title}", sub, ep.image.ifEmpty { fallback }, if (r != null && !r.done) (r.fraction * 1000).toInt() else -1, ep)
         })
         val last = detail?.let { store.lastOfSeries(it.item.id) }
         val idx = eps.indexOfFirst { it.id == last?.id }.coerceAtLeast(0)
@@ -1175,23 +1256,30 @@ class MainActivity : AppCompatActivity() {
         detailButtons.removeAllViews()
         if (d.kind == Kind.MOVIE) {
             val r = store.get(Kind.MOVIE, d.item.id)
-            if (r != null) {
-                detailButtons.addView(pill("Fortsetzen  ·  noch ${r.remainingMin} Min.", true) { playMovie(d.item, r.pos) })
+            if (r != null && !r.done) {
+                detailButtons.addView(pill("Fortsetzen ab ${fmt(r.pos)}  ·  noch ${r.remainingMin} Min.", true) { playMovie(d.item, r.pos) })
                 detailButtons.addView(pill("Von vorn", false) { playMovie(d.item, 0L) })
             } else {
-                detailButtons.addView(pill("Abspielen", true) { playMovie(d.item, 0L) })
+                detailButtons.addView(pill(if (r != null) "Nochmal ansehen" else "Abspielen", true) { playMovie(d.item, 0L) })
             }
         } else if (seasons.isNotEmpty()) {
             val all = seasons.values.flatten()
             val last = store.lastOfSeries(d.item.id)
-            val ep = all.firstOrNull { it.id == last?.id }
-            if (ep != null && last != null) {
-                detailButtons.addView(pill("Weiter: S${ep.season} F${ep.num}", true) { playEpisode(ep, last.pos) })
-            } else {
-                val first = all.first()
-                detailButtons.addView(pill("S${first.season} F${first.num} abspielen", true) { playEpisode(first, 0L) })
+            val i = all.indexOfFirst { it.id == last?.id }
+            val ep = all.getOrNull(i)
+            val next = if (i >= 0) all.getOrNull(i + 1) else null
+            when {
+                ep != null && last != null && !last.done ->
+                    detailButtons.addView(pill("Weiter: S${ep.season} F${ep.num} ab ${fmt(last.pos)}", true) { playEpisode(ep, last.pos) })
+                ep != null && next != null ->
+                    detailButtons.addView(pill("Nächste Folge: S${next.season} F${next.num}", true) { playEpisode(next, 0L) })
+                else -> {
+                    val first = all.first()
+                    detailButtons.addView(pill("S${first.season} F${first.num} abspielen", true) { playEpisode(first, 0L) })
+                }
             }
         }
+        detailButtons.addView(favPill(d.kind, d.item))
         if (hadFocus) detailButtons.getChildAt(0)?.requestFocus()
     }
 
@@ -1392,7 +1480,7 @@ class MainActivity : AppCompatActivity() {
         for ((i, sa) in repo.accounts.withIndex()) {
             val active = i == repo.activeIndex
             val row = cell(sa.label + "  ·  " + sa.account.username, if (active) "✓ Aktiv" else "", onLong = { editAccountDialog(i) }) {
-                if (!active) { repo.switchTo(i); store.accountKey = repo.accountKey; stopPlayer(); showBanner("Konto „${sa.label}“ ist jetzt aktiv", false); lifecycleScope.launch { repo.refreshUserInfo(); loadEpg(false); buildSettings() } }
+                if (!active) { repo.switchTo(i); store.accountKey = repo.accountKey; favs.accountKey = repo.accountKey; stopPlayer(); showBanner("Konto „${sa.label}“ ist jetzt aktiv", false); lifecycleScope.launch { repo.refreshUserInfo(); loadEpg(false); buildSettings() } }
             }
             if (active) row.findViewWithTag<TextView>("value")?.setTextColor(col(R.color.accent))
             if (firstFocus == null) firstFocus = row
@@ -1413,7 +1501,7 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 try {
                     repo.saveAccount(fLabel.text.toString(), fServer.text.toString(), fUser.text.toString(), fPass.text.toString(), -1)
-                    store.accountKey = repo.accountKey
+                    store.accountKey = repo.accountKey; favs.accountKey = repo.accountKey
                     msg.setTextColor(col(R.color.ok)); msg.text = "✓ Verbunden"
                     repo.refreshUserInfo(); loadEpg(false)
                     showSection(Section.HOME)
@@ -1489,7 +1577,7 @@ class MainActivity : AppCompatActivity() {
                 lifecycleScope.launch {
                     try {
                         repo.saveAccount(fLabel.text.toString(), fServer.text.toString(), fUser.text.toString(), fPass.text.toString(), index)
-                        store.accountKey = repo.accountKey
+                        store.accountKey = repo.accountKey; favs.accountKey = repo.accountKey
                         repo.refreshUserInfo(); buildSettings()
                         showBanner("Gespeichert", false)
                     } catch (e: Exception) {
@@ -1500,7 +1588,7 @@ class MainActivity : AppCompatActivity() {
             .setNegativeButton("Löschen") { _, _ ->
                 AlertDialog.Builder(this, R.style.AppleDialog)
                     .setMessage("Konto „${sa.label}“ wirklich löschen?")
-                    .setPositiveButton("Löschen") { _, _ -> stopPlayer(); repo.removeAccount(index); store.accountKey = repo.accountKey; lifecycleScope.launch { repo.refreshUserInfo(); loadEpg(false) }; buildSettings() }
+                    .setPositiveButton("Löschen") { _, _ -> stopPlayer(); repo.removeAccount(index); store.accountKey = repo.accountKey; favs.accountKey = repo.accountKey; lifecycleScope.launch { repo.refreshUserInfo(); loadEpg(false) }; buildSettings() }
                     .setNegativeButton("Abbrechen", null).show()
             }
             .setNeutralButton("Abbrechen", null)
@@ -1615,7 +1703,7 @@ class MainActivity : AppCompatActivity() {
 
     /** Film/Folge zu Ende: aus „Weiterschauen“ entfernen und zurück */
     private fun onVodEnd() {
-        playing?.let { store.remove(playingKind, it.id) }
+        playing?.let { store.markDone(playingKind, it.id) }
         closePlayer(save = false)
     }
 
@@ -1627,7 +1715,7 @@ class MainActivity : AppCompatActivity() {
     private fun playEpisode(ep: Episode, from: Long = -1L) {
         val s = detail?.item
         playingSeries = s; playingEp = ep
-        val start = if (from >= 0) from else store.get(Kind.SERIES, ep.id)?.pos ?: 0L
+        val start = if (from >= 0) from else store.get(Kind.SERIES, ep.id)?.takeIf { !it.done }?.pos ?: 0L
         val item = Item(ep.id, ep.title, s?.icon ?: "", "", ep.ext, 0, "", "", "")
         play(Kind.SERIES, item, ep.title, emptyList(), start)
     }
@@ -1653,6 +1741,7 @@ class MainActivity : AppCompatActivity() {
     private fun play(k: Kind, item: Item, title: String, list: List<Item>, from: Long) {
         if (mode == Mode.NONE) playerReturnFocus = currentFocus
         playing = item; playingKind = k; playingTitle = title; zapList = list; errorCount = 0
+        if (k != Kind.LIVE && from > 5000) showBanner("Weiter ab ${fmt(from)}", false)
         startMs = from
         exitToMini = false
         topPanel.visibility = View.GONE
@@ -2065,6 +2154,23 @@ class MainActivity : AppCompatActivity() {
                 if (down) handleFullKey(code, e.repeatCount)
                 return true
             }
+        }
+        // OK lange gedrückt (oder Menü-Taste) auf Film, Serie oder Sender: Meine Liste
+        if ((code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER) && mode != Mode.FULL) {
+            if (longHandled) { if (!down) longHandled = false; return true }
+            if (down && e.repeatCount == 1) {
+                val p = focusedPick()
+                if (p != null) {
+                    longHandled = true
+                    currentFocus?.isPressed = false
+                    toggleFav(p.kind, p.item)
+                    return true
+                }
+            }
+        }
+        if (code == KeyEvent.KEYCODE_MENU && mode == Mode.NONE) {
+            val p = focusedPick()
+            if (p != null) { if (down && e.repeatCount == 0) toggleFav(p.kind, p.item); return true }
         }
         // Play im Suchfeld startet die Suche
         if (code == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE || code == KeyEvent.KEYCODE_MEDIA_PLAY || code == KeyEvent.KEYCODE_SEARCH) {
