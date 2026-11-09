@@ -123,7 +123,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var panelTabs: LinearLayout
     private lateinit var panelBody: LinearLayout
 
-    private var section = Section.HOME
+    private var section = Section.LIVE
     private var page = Page.SHELVES
     private var listKind: Kind? = null
     private var cats: List<Category> = emptyList()
@@ -268,13 +268,15 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.root).viewTreeObserver.addOnGlobalFocusChangeListener { old, new ->
             val tabs = navButtons.values
             navEnteredFromOutside = tabs.any { it === new } && tabs.none { it === old }
+            // Einstellungen: Leiste oben nur zeigen, solange man in der Leiste ist
+            if (section == Section.SETTINGS && page == Page.LIST && new != null) showTopBar(navHasFocus())
         }
 
         val startApp: () -> Unit = {
             if (repo.account == null) {
                 showSection(Section.SETTINGS)
             } else {
-                showSection(Section.HOME)
+                showSection(Section.LIVE)
                 lifecycleScope.launch { repo.refreshUserInfo(); loadEpg(false) }
                 // Serien & Filme für die Suche im Hintergrund vorladen (nach der Startseite)
                 lifecycleScope.launch { delay(6000); repo.prefetchSearch() }
@@ -387,7 +389,8 @@ class MainActivity : AppCompatActivity() {
     private fun buildNav() {
         nav.removeAllViews()
         navButtons.clear()
-        for (s in listOf(Section.HOME, Section.LIVE, Section.MOVIE, Section.SERIES, Section.MYLIST, Section.EPG, Section.SEARCH, Section.SETTINGS)) {
+        // Live TV ist die Startseite; „Start“ gibt es nicht mehr
+        for (s in listOf(Section.LIVE, Section.SERIES, Section.MOVIE, Section.MYLIST, Section.EPG, Section.SEARCH, Section.SETTINGS)) {
             val icon = when (s) { Section.SEARCH -> R.drawable.ic_tab_search; Section.SETTINGS -> R.drawable.ic_tab_settings; else -> 0 }
             val b = TextView(this).apply {
                 isFocusable = true; isClickable = true
@@ -405,7 +408,7 @@ class MainActivity : AppCompatActivity() {
                     setPadding(dp(14), dp(10), dp(14), dp(10))
                 } else {
                     text = tabLabel(s)
-                    setPadding(dp(20), dp(9), dp(20), dp(9))
+                    setPadding(dp(18), dp(9), dp(18), dp(9))
                 }
                 layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginEnd = dp(2) }
                 setOnClickListener { showSection(s) }
@@ -654,9 +657,9 @@ class MainActivity : AppCompatActivity() {
     /** Meine Liste: Weiterschauen, gemerkte Filme, Serien und Sender */
     private fun buildMyList(add: (Shelf) -> Unit) {
         continueShelf(null)?.let(add)
-        add(Shelf("Meine Filme", CardStyle.POSTER, favs.all(Kind.MOVIE).map { posterCard(Kind.MOVIE, it.toItem()) }))
         add(Shelf("Meine Serien", CardStyle.POSTER, favs.all(Kind.SERIES).map { posterCard(Kind.SERIES, it.toItem()) }))
         add(Shelf("Meine Sender", CardStyle.CHANNEL, favs.all(Kind.LIVE).map { channelCard(it.toItem()) }))
+        add(Shelf("Meine Filme", CardStyle.POSTER, favs.all(Kind.MOVIE).map { posterCard(Kind.MOVIE, it.toItem()) }))
     }
 
     /** zu „Meine Liste“ hinzufügen bzw. entfernen */
@@ -1512,7 +1515,7 @@ class MainActivity : AppCompatActivity() {
                     store.accountKey = repo.accountKey; favs.accountKey = repo.accountKey
                     msg.setTextColor(col(R.color.ok)); msg.text = "✓ Verbunden"
                     repo.refreshUserInfo(); loadEpg(false)
-                    showSection(Section.HOME)
+                    showSection(Section.LIVE)
                 } catch (e: Exception) {
                     msg.setTextColor(col(R.color.err)); msg.text = e.message ?: "Verbindung fehlgeschlagen. Server-URL und Zugangsdaten prüfen."
                 }
@@ -2143,7 +2146,7 @@ class MainActivity : AppCompatActivity() {
             focusCurrentTab()
             return true
         }
-        if (section != Section.HOME) { showSection(Section.HOME, keepFocus = true); return true }
+        if (section != Section.LIVE) { showSection(Section.LIVE, keepFocus = true); return true }
         return false
     }
 
