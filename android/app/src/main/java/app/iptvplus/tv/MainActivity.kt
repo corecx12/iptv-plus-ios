@@ -1034,6 +1034,10 @@ class MainActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) { scheduleSearch(s?.toString() ?: "", now = false) }
         })
         onSubmit(search) { submitListSearch() }
+        // Pfeil nach oben im Suchfeld: zur Leiste oben
+        search.setOnKeyListener { _, code, ev ->
+            if (code == KeyEvent.KEYCODE_DPAD_UP && ev.action == KeyEvent.ACTION_DOWN) { focusCurrentTab(); true } else false
+        }
     }
 
     private fun submitListSearch() {
