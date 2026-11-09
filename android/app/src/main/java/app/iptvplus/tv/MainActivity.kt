@@ -986,6 +986,8 @@ class MainActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) { runGlobalSearch(s?.toString() ?: "", now = false) }
         })
         onSubmit(globalSearch) { submitGlobalSearch() }
+        // Cursor ans Ende, damit Löschen/Weitertippen beim erneuten Öffnen sofort passt
+        globalSearch.setOnFocusChangeListener { _, has -> if (has) globalSearch.post { globalSearch.setSelection(globalSearch.text.length) } }
     }
 
     private fun submitGlobalSearch() {
