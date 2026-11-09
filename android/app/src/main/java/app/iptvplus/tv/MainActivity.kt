@@ -2154,6 +2154,10 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
+    private val settingsBarCheck = Runnable {
+        if (section == Section.SETTINGS && page == Page.LIST) showTopBar(navHasFocus())
+    }
+
     override fun dispatchKeyEvent(e: KeyEvent): Boolean {
         val code = e.keyCode
         val down = e.action == KeyEvent.ACTION_DOWN
@@ -2209,6 +2213,8 @@ class MainActivity : AppCompatActivity() {
         }
         if (mode == Mode.MINI && e.action == KeyEvent.ACTION_UP &&
             (code == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE || code == KeyEvent.KEYCODE_MEDIA_PLAY || code == KeyEvent.KEYCODE_MENU)) return true
+        // Einstellungen: nach jedem Tastendruck Leiste nur zeigen, wenn man in der Leiste ist
+        if (section == Section.SETTINGS && page == Page.LIST && mode == Mode.NONE) ui.post(settingsBarCheck)
         if (code == KeyEvent.KEYCODE_BACK && down && e.repeatCount == 0 && handleBack()) return true
         if (down && code == KeyEvent.KEYCODE_DPAD_UP && heroUpFromFirstRow()) return true
         return super.dispatchKeyEvent(e)
