@@ -48,6 +48,17 @@ public class Item
 {
     public string Id = "", Name = "", Icon = "", CategoryId = "", Ext = "", EpgId = "", Year = "", Rating = "";
     public int Num;
+    /// alle Kategorien (category_ids) – ein Titel kann in mehreren stehen
+    public string[] CategoryIds = Array.Empty<string>();
+
+    /// Haupt- und Zusatzkategorien
+    public IEnumerable<string> Cats => CategoryIds.Length == 0 ? new[] { CategoryId } : CategoryIds.Append(CategoryId);
+
+    static string[] Ids(JsonElement o, string key)
+    {
+        if (!o.TryGetProperty(key, out var v) || v.ValueKind != JsonValueKind.Array) return Array.Empty<string>();
+        return v.EnumerateArray().Select(x => x.ValueKind == JsonValueKind.String ? x.GetString() ?? "" : x.ToString()).Where(x => x.Length > 0).ToArray();
+    }
 
     public static string S(JsonElement o, string key)
     {
@@ -75,7 +86,8 @@ public class Item
             Num = int.TryParse(S(o, "num"), out var n) ? n : 0,
             EpgId = S(o, "epg_channel_id").ToLowerInvariant().Trim(),
             Year = y.Length > 0 ? y : (rd.Length >= 4 ? rd[..4] : ""),
-            Rating = S(o, "rating")
+            Rating = S(o, "rating"),
+            CategoryIds = Ids(o, "category_ids")
         };
     }
 }
@@ -177,47 +189,169 @@ public class XtreamApi
 public static class Lang
 {
     public static readonly Regex German = new(@"(^|[^a-z])(de|ger|deu)([^a-z]|$)|deutsch|germany|österreich|schweiz", RegexOptions.IgnoreCase);
-    public static readonly Regex TitleDE = new(@"^\s*[\[|(]?\s*(de|ger|deu)\s*[\]|):\-]", RegexOptions.IgnoreCase);
-    public static readonly Regex TitleForeign = new(@"^\s*[\[|(]?\s*(en|eng|uk|us|fr|it|es|tr|pl|nl|ar|multi)\s*[\]|):\-]", RegexOptions.IgnoreCase);
+    /// „DE: Titel“, „[DE] Titel“ oder „Titel (DE)“
+    public static readonly Regex TitleDE = new(@"^\s*[\[|(]?\s*(de|ger|deu)\s*[\]|):\-]|[\[(|]\s*(de|ger|deu)\s*[\])|]", RegexOptions.IgnoreCase);
+    /// „EN: Titel“, „[FR] Titel“ oder „Titel (EN)“
+    public static readonly Regex TitleForeign = new(@"^\s*[\[|(]?\s*(en|eng|uk|us|fr|it|es|tr|pl|nl|ar)\s*[\]|):\-]|[\[(|]\s*(en|eng|fr|it|es|tr|pl|nl|ar)\s*[\])|]", RegexOptions.IgnoreCase);
     public static readonly Regex ForeignCat = new(@"(^|[^a-z])(uk|gb|us|usa|fr|it|es|nl|be|pl|tr|pt|ar|yu|exyu|ex-yu|al|ro|gr|ru|ua|in|pk|af|se|dk|no|fi|hu|cz|sk|hr|rs|ba|bg|ca|au|br|mx|latino|arab|arabic|turkey|turk|france|italy|italia|spain|espana|poland|polska|portugal|netherlands|nederland|kurd|persian|iran|india|africa|asia)([^a-z]|$)", RegexOptions.IgnoreCase);
+    /// fremdsprachige Film-/Serienkategorien – ohne Kürzel, die auch deutsche Wörter sind („in“, „es“, „no“ …)
+    public static readonly Regex ForeignVodCat = new(@"(^|[^a-z])(en|eng|english|uk|gb|us|usa|fr|french|nl|pl|tr|pt|yu|exyu|ex-yu|ro|gr|ru|ua|pk|dk|fi|hu|cz|sk|hr|rs|bg|au|br|mx|latino|arab|arabic|turkey|turk|turkish|france|italy|italia|italian|spain|espana|spanish|poland|polska|portugal|netherlands|nederland|kurd|persian|iran|india|hindi|africa|asia|albania)([^a-z]|$)", RegexOptions.IgnoreCase);
     static readonly Regex QPrefix = new(@"^\s*[\[|(]?\s*[a-z]{2,3}\s*[\]|):\-]\s*", RegexOptions.IgnoreCase);
     static readonly Regex NonAlnum = new(@"[^a-z0-9]+");
 
-    public static string NormQ(string s)
+    public static string NormQ(string s) => NonAlnum.Replace(Fold(s), "");
+
+    /// klein, Umlaute ausgeschrieben, Akzente weg (é → e), Sprach-Vorsilbe „DE:“ weg
+    public static string Fold(string s)
     {
         var x = (s ?? "").ToLowerInvariant().Replace("ä", "ae").Replace("ö", "oe").Replace("ü", "ue").Replace("ß", "ss");
-        x = QPrefix.Replace(x, "");
-        return NonAlnum.Replace(x, "");
+        var d = x.Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder(d.Length);
+        foreach (var c in d)
+            if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark) sb.Append(c);
+        return QPrefix.Replace(sb.ToString(), "");
     }
 
-    static int Lev(string a, string b)
+    /// Lautschrift, damit die genaue Schreibweise egal ist: Schrek = Shrek, Titanik = Titanic, Wikings = Vikings
+    public static string Sound(string w)
     {
-        int m = a.Length, n = b.Length;
-        if (m == 0) return n;
-        if (n == 0) return m;
-        var prev = new int[n + 1];
-        var cur = new int[n + 1];
-        for (int j = 0; j <= n; j++) prev[j] = j;
-        for (int i = 1; i <= m; i++)
+        var o = new StringBuilder(w.Length);
+        int n = w.Length;
+        void Push(char ch)
         {
-            cur[0] = i;
-            for (int j = 1; j <= n; j++)
-                cur[j] = Math.Min(Math.Min(prev[j] + 1, cur[j - 1] + 1), prev[j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1));
-            (prev, cur) = (cur, prev);
+            if (o.Length > 0 && o[^1] == ch && !(ch >= '0' && ch <= '9')) return;
+            o.Append(ch);
         }
-        return prev[n];
+        for (int i = 0; i < n;)
+        {
+            char c = w[i];
+            if (!((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))) { i++; continue; }
+            char d = i + 1 < n ? w[i + 1] : ' ';
+            char e = i + 2 < n ? w[i + 2] : ' ';
+            int step = 2;
+            if (c == 's' && d == 'c' && e == 'h') { Push('s'); Push('h'); step = 3; }
+            else if (c == 'c' && d == 'k') Push('k');
+            else if (c == 'p' && d == 'h') Push('f');
+            else if (c == 't' && d == 'h') Push('t');
+            else if (c == 'q' && d == 'u') { Push('k'); Push('v'); }
+            else if (c == 'd' && d == 't') Push('t');
+            else if (c == 'a' && d == 'e') Push('e');
+            else if (c == 'o' && d == 'e') Push('o');
+            else if (c == 'u' && d == 'e') Push('u');
+            else if (c == 'i' && d == 'e') Push('i');
+            else if (c == 'e' && (d == 'i' || d == 'y')) { Push('a'); Push('i'); }
+            else
+            {
+                step = 1;
+                switch (c)
+                {
+                    case 'c': Push('k'); break;
+                    case 'z': Push('s'); break;
+                    case 'y': Push('i'); break;
+                    case 'w': Push('v'); break;
+                    case 'x': Push('k'); Push('s'); break;
+                    default: Push(c); break;
+                }
+            }
+            i += step;
+        }
+        return o.ToString();
     }
 
-    public static bool Fuzzy(string q, string t)
+    /// Suchschlüssel eines Titels (einmal pro Liste berechnet)
+    public static string Key(string title) => Sound(Fold(title));
+
+    /// erlaubte Tippfehler je Wortlänge
+    static int Tol(int len) => len <= 3 ? 0 : len <= 5 ? 1 : len <= 8 ? 2 : 3;
+
+    /// kleinster Abstand von p zu irgendeinem Stück von t (Levenshtein mit freiem Anfang)
+    static int Near(string p, string t)
     {
-        int tol = q.Length >= 8 ? 2 : 1;
-        for (int len = Math.Max(3, q.Length - tol); len <= q.Length + tol; len++)
+        int m = p.Length;
+        var col = new int[m + 1];
+        for (int i = 0; i <= m; i++) col[i] = i;
+        int best = m;
+        foreach (var tc in t)
         {
-            if (len > t.Length) continue;
-            for (int i = 0; i + len <= t.Length; i++)
-                if (Lev(q, t.Substring(i, len)) <= tol) return true;
+            int diag = col[0];
+            col[0] = 0;
+            for (int i = 1; i <= m; i++)
+            {
+                int tmp = col[i];
+                int v = diag + (p[i - 1] == tc ? 0 : 1);
+                if (col[i] + 1 < v) v = col[i] + 1;
+                if (col[i - 1] + 1 < v) v = col[i - 1] + 1;
+                col[i] = v;
+                diag = tmp;
+            }
+            if (col[m] < best) best = col[m];
         }
-        return false;
+        return best;
+    }
+
+    public sealed class Query
+    {
+        public readonly string Whole;
+        public readonly List<string> Words;
+        public Query(string text)
+        {
+            var f = Fold(text);
+            Whole = Sound(f);
+            var w = NonAlnum.Split(f).Select(Sound).Where(x => x.Length > 0).ToList();
+            if (w.Count > 1) w = w.Where(x => x.Length >= 2).ToList();
+            Words = w.Count == 0 && Whole.Length > 0 ? new List<string> { Whole } : w;
+        }
+        public bool IsEmpty => Whole.Length == 0;
+    }
+
+    /// Wie gut passt der Titel? -1 = gar nicht, sonst kleiner = besser.
+    /// Wörter dürfen fehlen oder vertauscht sein („haus geldes“ → Haus des Geldes), Tippfehler sind erlaubt.
+    public static int Score(Query q, string t)
+    {
+        if (q.IsEmpty) return -1;
+        if (t == q.Whole) return 0;
+        if (t.StartsWith(q.Whole, StringComparison.Ordinal)) return 1;
+        if (t.Contains(q.Whole, StringComparison.Ordinal)) return 2;
+        int sum = 0;
+        bool exact = true;
+        foreach (var w in q.Words)
+        {
+            if (t.Contains(w, StringComparison.Ordinal)) continue;
+            exact = false;
+            int tl = Tol(w.Length);
+            if (tl == 0) return WholeFuzzy(q, t);
+            int d = Near(w, t);
+            if (d > tl) return WholeFuzzy(q, t);
+            sum += d;
+        }
+        return exact ? 3 : 10 + sum;
+    }
+
+    static int WholeFuzzy(Query q, string t)
+    {
+        if (q.Words.Count < 2) return -1;
+        int tl = Tol(q.Whole.Length);
+        if (tl == 0) return -1;
+        int d = Near(q.Whole, t);
+        return d <= tl ? 10 + d : -1;
+    }
+
+    /// Deutsch-Prüfung; die Kategorien werden nur einmal ausgewertet.
+    /// „EN: …“ → nein, „DE: …“ → ja, in irgendeiner deutschen Kategorie → ja,
+    /// nur in klar fremdsprachigen Kategorien → nein, neutrale Kategorien („Netflix“, „Kinder“) → ja
+    public static Func<Item, bool> GermanFilter(List<Category> cats)
+    {
+        cats ??= new();
+        var de = cats.Where(x => German.IsMatch(x.Name)).Select(x => x.Id).ToHashSet();
+        var foreign = cats.Where(x => !de.Contains(x.Id) && ForeignVodCat.IsMatch(x.Name)).Select(x => x.Id).ToHashSet();
+        return it =>
+        {
+            if (TitleForeign.IsMatch(it.Name)) return false;
+            if (de.Count == 0 || TitleDE.IsMatch(it.Name)) return true;
+            var ids = it.Cats.ToList();
+            if (ids.Any(de.Contains)) return true;
+            return !ids.Any(foreign.Contains);
+        };
     }
 }
 

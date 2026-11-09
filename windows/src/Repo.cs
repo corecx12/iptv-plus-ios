@@ -34,6 +34,8 @@ public class Repo
 
     readonly Dictionary<Kind, List<Category>> _catCache = new();
     readonly Dictionary<string, List<Item>> _listCache = new();
+    /// Suchschlüssel je Liste, damit nicht bei jedem Tastendruck alle Titel neu aufbereitet werden
+    readonly Dictionary<Kind, (List<Item> List, string[] Keys)> _keyCache = new();
 
     public Account Account => (ActiveIndex >= 0 && ActiveIndex < Accounts.Count) ? Accounts[ActiveIndex].Account : null;
     public XtreamApi Api => Account != null ? new XtreamApi(Account) : null;
@@ -71,7 +73,7 @@ public class Repo
 
     public void SetDeOnly(bool v) { DeOnly = v; _listCache.Clear(); Persist(); }
 
-    void ResetCaches() { _catCache.Clear(); _listCache.Clear(); Epg = null; try { File.Delete(EpgPath); } catch { } }
+    void ResetCaches() { _catCache.Clear(); _listCache.Clear(); lock (_keyCache) _keyCache.Clear(); Epg = null; try { File.Delete(EpgPath); } catch { } }
 
     public async Task<int> SaveAccountAsync(string label, string server, string user, string pass, int index)
     {
@@ -116,16 +118,9 @@ public class Repo
 
     public bool FilterDE(Kind k) => DeOnly && (k == Kind.Movie || k == Kind.Series);
 
-    HashSet<string> GermanCatIds(Kind k) =>
-        (_catCache.TryGetValue(k, out var c) ? c : new()).Where(x => Lang.German.IsMatch(x.Name)).Select(x => x.Id).ToHashSet();
+    Func<Item, bool> GermanFilter(Kind k) => Lang.GermanFilter(_catCache.TryGetValue(k, out var c) ? c : new());
 
-    public bool IsGerman(Item it, Kind k)
-    {
-        if (Lang.TitleForeign.IsMatch(it.Name)) return false;
-        if (Lang.TitleDE.IsMatch(it.Name)) return true;
-        var ids = GermanCatIds(k);
-        return ids.Count == 0 || ids.Contains(it.CategoryId);
-    }
+    public bool IsGerman(Item it, Kind k) => GermanFilter(k)(it);
 
     public async Task<List<Category>> RawCategoriesAsync(Kind k)
     {
@@ -154,22 +149,48 @@ public class Repo
         if (string.IsNullOrEmpty(cat))
         {
             var all = await AllItemsAsync(k);
-            return FilterDE(k) ? all.Where(i => IsGerman(i, k)).ToList() : all;
+            return FilterDE(k) ? all.Where(GermanFilter(k)).ToList() : all;
         }
         var key = k.Path() + ":" + cat;
         if (!_listCache.TryGetValue(key, out var l)) { l = await Api.ItemsAsync(k, cat); _listCache[key] = l; }
         return l;
     }
 
+    /// Suche über alle Kategorien: Schreibweise egal, Wörter in beliebiger Reihenfolge,
+    /// fehlende Wörter und Tippfehler erlaubt. Beste Treffer zuerst.
     public async Task<List<Item>> SearchAsync(Kind k, string query)
     {
-        var q = Lang.NormQ(query);
-        if (q.Length == 0) return new();
+        var q = new Lang.Query(query);
+        if (q.IsEmpty) return new();
         var all = await AllItemsAsync(k);
-        if (FilterDE(k)) all = all.Where(i => IsGerman(i, k)).ToList();
-        var hits = all.Where(i => Lang.NormQ(i.Name).Contains(q)).ToList();
-        if (hits.Count > 0 || q.Length < 4) return hits;
-        return all.Where(i => Lang.Fuzzy(q, Lang.NormQ(i.Name))).Take(300).ToList();
+        var ok = FilterDE(k) ? GermanFilter(k) : null;
+        return await Task.Run(() =>
+        {
+            string[] keys;
+            lock (_keyCache)
+            {
+                if (_keyCache.TryGetValue(k, out var kc) && ReferenceEquals(kc.List, all)) keys = kc.Keys;
+                else { keys = all.Select(i => Lang.Key(i.Name)).ToArray(); _keyCache[k] = (all, keys); }
+            }
+            var hits = new List<(int S, int Len, int I)>();
+            for (int i = 0; i < all.Count; i++)
+            {
+                int s = Lang.Score(q, keys[i]);
+                if (s < 0) continue;
+                if (ok != null && !ok(all[i])) continue;
+                hits.Add((s, keys[i].Length, i));
+            }
+            hits.Sort();
+            var seen = new HashSet<string>();
+            var res = new List<Item>();
+            foreach (var h in hits)
+            {
+                var it = all[h.I];
+                if (seen.Add(it.Id)) res.Add(it);
+                if (res.Count >= 300) break;
+            }
+            return res;
+        });
     }
 
     public string StreamUrl(Kind k, Item it) => Api?.StreamUrl(k, it.Id, k == Kind.Live ? "ts" : it.Ext);

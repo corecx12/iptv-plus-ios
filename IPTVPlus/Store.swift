@@ -21,6 +21,8 @@ final class Store: ObservableObject {
 
     private var catCache: [Kind: [Category]] = [:]
     private var listCache: [String: [Item]] = [:]
+    /// Suchschlüssel je Liste, damit nicht bei jedem Tastendruck alle Titel neu aufbereitet werden
+    private var keyCache: [Kind: (count: Int, first: String, keys: [[UInt8]])] = [:]
     private var epgTask: Task<Void, Never>?
 
     var account: Account? { accounts.indices.contains(activeIndex) ? accounts[activeIndex].account : nil }
@@ -40,7 +42,7 @@ final class Store: ObservableObject {
         UserDefaults.standard.set(activeIndex, forKey: "activeIndex")
     }
 
-    private func resetCaches() { catCache = [:]; listCache = [:]; epg = nil; Store.deleteEPGCache() }
+    private func resetCaches() { catCache = [:]; listCache = [:]; keyCache = [:]; epg = nil; Store.deleteEPGCache() }
 
     /// Konto prüfen und speichern. index == nil -> neues Konto, sonst bestehendes ersetzen.
     func saveAccount(label: String, server: String, username: String, password: String, index: Int?) async throws {
@@ -106,12 +108,7 @@ final class Store: ObservableObject {
         Set((catCache[k] ?? []).filter { $0.name.rxMatch(Lang.reGerman) }.map { $0.id })
     }
 
-    func isGerman(_ it: Item, _ k: Kind) -> Bool {
-        if it.name.rxMatch(Lang.reTitleForeign) { return false }
-        if it.name.rxMatch(Lang.reTitleDE) { return true }
-        let ids = germanCatIDs(k)
-        return ids.isEmpty ? true : ids.contains(it.categoryID)
-    }
+    func isGerman(_ it: Item, _ k: Kind) -> Bool { Lang.germanFilter(catCache[k] ?? [])(it) }
 
     func filterDE(_ k: Kind) -> Bool { deOnly && (k == .movie || k == .series) }
 
@@ -141,7 +138,9 @@ final class Store: ObservableObject {
         guard let api = api else { return [] }
         if category.isEmpty {
             let all = try await allItems(k)
-            return filterDE(k) ? all.filter { isGerman($0, k) } : all
+            if !filterDE(k) { return all }
+            let ok = Lang.germanFilter(catCache[k] ?? [])
+            return all.filter(ok)
         }
         let key = "\(k.rawValue):\(category)"
         if let c = listCache[key] { return c }
@@ -150,17 +149,35 @@ final class Store: ObservableObject {
         return items
     }
 
-    /// Suche über ALLE Kategorien, Schreibweise egal, Tippfehler-tolerant
+    /// Suche über ALLE Kategorien: Schreibweise egal, Wörter in beliebiger Reihenfolge,
+    /// fehlende Wörter und Tippfehler erlaubt. Beste Treffer zuerst.
     func search(_ k: Kind, _ query: String) async throws -> [Item] {
-        let q = Lang.normQ(query)
+        let q = Lang.Query(query)
         guard !q.isEmpty else { return [] }
-        var all = try await allItems(k)
-        if filterDE(k) { all = all.filter { isGerman($0, k) } }
-        let hits = all.filter { Lang.normQ($0.name).contains(q) }
-        if !hits.isEmpty || q.count < 4 { return hits }
-        return await Task.detached(priority: .userInitiated) {
-            Array(all.filter { Lang.fuzzy(q, Lang.normQ($0.name)) }.prefix(300))
+        let all = try await allItems(k)
+        let cached = keyCache[k].flatMap { $0.count == all.count && $0.first == (all.first?.id ?? "") ? $0.keys : nil }
+        let ok: ((Item) -> Bool)? = filterDE(k) ? Lang.germanFilter(catCache[k] ?? []) : nil
+        let (hits, keys) = await Task.detached(priority: .userInitiated) { () -> ([Item], [[UInt8]]) in
+            let keys = cached ?? all.map { Lang.key($0.name) }
+            var scored: [(s: Int, len: Int, i: Int)] = []
+            for i in all.indices {
+                let s = Lang.score(q, keys[i])
+                if s < 0 { continue }
+                if let ok = ok, !ok(all[i]) { continue }
+                scored.append((s, keys[i].count, i))
+            }
+            scored.sort { ($0.s, $0.len, $0.i) < ($1.s, $1.len, $1.i) }
+            var seen = Set<String>()
+            var out: [Item] = []
+            for h in scored {
+                let it = all[h.i]
+                if seen.insert(it.id).inserted { out.append(it) }
+                if out.count >= 300 { break }
+            }
+            return (out, keys)
         }.value
+        if cached == nil { keyCache[k] = (all.count, all.first?.id ?? "", keys) }
+        return hits
     }
 
     func streamURL(_ k: Kind, _ it: Item) -> URL? {

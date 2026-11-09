@@ -140,8 +140,9 @@ struct ItemListView: View {
     @State private var play: PlayRequest?
 
     var shown: [Item] {
-        let q = Lang.normQ(filter)
-        return q.isEmpty ? items : items.filter { Lang.normQ($0.name).contains(q) }
+        let q = Lang.Query(filter)
+        if q.isEmpty { return items }
+        return items.filter { Lang.score(q, Lang.key($0.name)) >= 0 }
     }
 
     var body: some View {

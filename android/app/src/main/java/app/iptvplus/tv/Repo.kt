@@ -35,6 +35,8 @@ class Repo(private val ctx: Context) {
 
     private val catCache = HashMap<Kind, List<Category>>()
     private val listCache = HashMap<String, List<Item>>()
+    /** Suchschlüssel je Liste, damit nicht bei jedem Tastendruck alle Titel neu aufbereitet werden */
+    private val keyCache = HashMap<Kind, Pair<List<Item>, Array<String>>>()
     private val infoCache = HashMap<String, JSONObject>()
 
     val api: XtreamApi? get() = account?.let { XtreamApi(it) }
@@ -63,7 +65,7 @@ class Repo(private val ctx: Context) {
 
     private fun epgFile() = File(ctx.cacheDir, "epg_cache.json")
 
-    private fun resetCaches() { catCache.clear(); listCache.clear(); infoCache.clear(); epg = null; epgFile().delete() }
+    private fun resetCaches() { catCache.clear(); listCache.clear(); keyCache.clear(); infoCache.clear(); epg = null; epgFile().delete() }
 
     /** Kennung des aktiven Kontos (für „Weiterschauen“ pro Konto) */
     val accountKey: String get() = account?.let { it.server + "|" + it.username } ?: ""
@@ -135,15 +137,27 @@ class Repo(private val ctx: Context) {
 
     fun filterDE(k: Kind) = deOnly && (k == Kind.MOVIE || k == Kind.SERIES)
 
-    private fun germanCatIds(k: Kind): Set<String> =
-        (catCache[k] ?: emptyList()).filter { Lang.reGerman.containsMatchIn(it.name) }.map { it.id }.toSet()
-
-    fun isGerman(it: Item, k: Kind): Boolean {
-        if (Lang.reTitleForeign.containsMatchIn(it.name)) return false
-        if (Lang.reTitleDE.containsMatchIn(it.name)) return true
-        val ids = germanCatIds(k)
-        return ids.isEmpty() || ids.contains(it.categoryId)
+    /**
+     * Prüft, ob ein Titel deutsch ist. Die Kategorien werden nur einmal ausgewertet.
+     * - „EN: …“ / „(FR)“ im Titel → nein, „DE: …“ → ja
+     * - steht der Titel in irgendeiner deutschen Kategorie (auch Zusatzkategorie) → ja
+     * - nur in klar fremdsprachigen Kategorien („EN | Action“, „UK“, „Türkei“) → nein
+     * - neutrale Kategorien ohne Länderkennung („Netflix“, „Kinder“, „4K“) → ja
+     */
+    fun germanFilter(k: Kind): (Item) -> Boolean {
+        val cats = catCache[k] ?: emptyList()
+        val de = cats.filter { Lang.reGerman.containsMatchIn(it.name) }.map { it.id }.toHashSet()
+        val foreign = cats.filter { it.id !in de && Lang.reForeignVodCat.containsMatchIn(it.name) }.map { it.id }.toHashSet()
+        return f@{ item: Item ->
+            if (Lang.reTitleForeign.containsMatchIn(item.name)) return@f false
+            if (de.isEmpty() || Lang.reTitleDE.containsMatchIn(item.name)) return@f true
+            val ids = item.cats()
+            if (ids.any { c -> c in de }) return@f true
+            ids.none { c -> c in foreign }
+        }
     }
+
+    fun isGerman(it: Item, k: Kind): Boolean = germanFilter(k)(it)
 
     suspend fun rawCategories(k: Kind): List<Category> = withContext(Dispatchers.IO) {
         catCache[k] ?: api!!.categories(k).also { catCache[k] = it }
@@ -164,22 +178,48 @@ class Repo(private val ctx: Context) {
     suspend fun items(k: Kind, cat: String): List<Item> {
         if (cat.isEmpty()) {
             val all = allItems(k)
-            return if (filterDE(k)) withContext(Dispatchers.Default) { all.filter { isGerman(it, k) } } else all
+            return if (filterDE(k)) withContext(Dispatchers.Default) { val ok = germanFilter(k); all.filter(ok) } else all
         }
         return withContext(Dispatchers.IO) {
             listCache["${k.path}:$cat"] ?: api!!.items(k, cat).also { listCache["${k.path}:$cat"] = it }
         }
     }
 
-    /** Suche über alle Kategorien, Schreibweise egal, Tippfehler-tolerant */
+    private fun keys(k: Kind, list: List<Item>): Array<String> {
+        keyCache[k]?.let { if (it.first === list) return it.second }
+        val a = Array(list.size) { Lang.key(list[it].name) }
+        keyCache[k] = list to a
+        return a
+    }
+
+    /**
+     * Suche über alle Kategorien: Schreibweise egal, Wörter in beliebiger Reihenfolge,
+     * fehlende Wörter und Tippfehler erlaubt. Beste Treffer zuerst.
+     */
     suspend fun search(k: Kind, query: String): List<Item> {
-        val q = Lang.normQ(query)
-        if (q.isEmpty()) return emptyList()
+        val q = Lang.Query(query)
+        if (q.isEmpty) return emptyList()
         val raw = allItems(k)
         return withContext(Dispatchers.Default) {
-            val all = if (filterDE(k)) raw.filter { isGerman(it, k) } else raw
-            val hits = all.filter { Lang.normQ(it.name).contains(q) }
-            if (hits.isNotEmpty() || q.length < 4) hits else all.filter { Lang.fuzzy(q, Lang.normQ(it.name)) }.take(300)
+            val keys = synchronized(keyCache) { keys(k, raw) }
+            val ok = if (filterDE(k)) germanFilter(k) else null
+            val hits = ArrayList<Long>()
+            for (i in raw.indices) {
+                val s = Lang.score(q, keys[i])
+                if (s < 0) continue
+                if (ok != null && !ok(raw[i])) continue
+                // Rang, dann kürzerer Titel zuerst
+                hits.add((s.toLong() shl 40) or (keys[i].length.toLong().coerceAtMost(0xFFFF) shl 24) or i.toLong())
+            }
+            hits.sort()
+            val seen = HashSet<String>()
+            val out = ArrayList<Item>()
+            for (h in hits) {
+                val it = raw[(h and 0xFFFFFF).toInt()]
+                if (seen.add(it.id)) out.add(it)
+                if (out.size >= 300) break
+            }
+            out
         }
     }
 

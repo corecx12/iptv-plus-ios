@@ -40,12 +40,18 @@ data class Category(val id: String, val name: String)
 data class Item(
     val id: String, val name: String, val icon: String, val categoryId: String,
     val ext: String, val num: Int, val epgId: String, val year: String, val rating: String,
-    val added: Long = 0
+    val added: Long = 0,
+    /** alle Kategorien des Titels (category_ids), kommagetrennt – ein Film kann in mehreren stehen */
+    val categoryIds: String = ""
 ) {
+    /** Haupt- und Zusatzkategorien */
+    fun cats(): List<String> =
+        if (categoryIds.isEmpty()) listOf(categoryId) else (categoryIds.split(',') + categoryId).filter { it.isNotEmpty() }.distinct()
+
     companion object {
         /** nur diese Felder werden beim Lesen großer Listen behalten */
         val FIELDS = setOf("series_id", "stream_id", "name", "cover", "stream_icon", "category_id", "container_extension",
-            "num", "epg_channel_id", "year", "releaseDate", "rating", "added", "last_modified")
+            "num", "epg_channel_id", "year", "releaseDate", "rating", "added", "last_modified", "category_ids")
 
         fun from(m: Map<String, String>, k: Kind): Item {
             fun g(key: String) = m[key] ?: ""
@@ -60,7 +66,8 @@ data class Item(
                 epgId = g("epg_channel_id").lowercase().trim(),
                 year = if (y.isNotEmpty()) y else g("releaseDate").take(4),
                 rating = g("rating"),
-                added = g("added").toLongOrNull() ?: g("last_modified").toLongOrNull() ?: 0L
+                added = g("added").toLongOrNull() ?: g("last_modified").toLongOrNull() ?: 0L,
+                categoryIds = g("category_ids")
             )
         }
 
@@ -76,7 +83,8 @@ data class Item(
                 epgId = o.s("epg_channel_id").lowercase().trim(),
                 year = if (y.isNotEmpty()) y else o.s("releaseDate").take(4),
                 rating = o.s("rating"),
-                added = o.s("added").toLongOrNull() ?: o.s("last_modified").toLongOrNull() ?: 0L
+                added = o.s("added").toLongOrNull() ?: o.s("last_modified").toLongOrNull() ?: 0L,
+                categoryIds = o.optJSONArray("category_ids")?.let { a -> (0 until a.length()).joinToString(",") { a.opt(it).toString() } } ?: ""
             )
         }
     }
@@ -157,6 +165,19 @@ class XtreamApi(val acc: Account) {
                         android.util.JsonToken.STRING, android.util.JsonToken.NUMBER -> m[name] = r.nextString()
                         android.util.JsonToken.BOOLEAN -> m[name] = r.nextBoolean().toString()
                         android.util.JsonToken.NULL -> r.nextNull()
+                        android.util.JsonToken.BEGIN_ARRAY -> {
+                            // category_ids: [12, 34]
+                            val ids = ArrayList<String>(4)
+                            r.beginArray()
+                            while (r.hasNext()) {
+                                when (r.peek()) {
+                                    android.util.JsonToken.STRING, android.util.JsonToken.NUMBER -> ids.add(r.nextString())
+                                    else -> r.skipValue()
+                                }
+                            }
+                            r.endArray()
+                            m[name] = ids.joinToString(",")
+                        }
                         else -> r.skipValue()
                     }
                 }
@@ -188,46 +209,137 @@ class XtreamApi(val acc: Account) {
 
 object Lang {
     val reGerman = Regex("(^|[^a-z])(de|ger|deu)([^a-z]|$)|deutsch|germany|österreich|schweiz", RegexOption.IGNORE_CASE)
-    val reTitleDE = Regex("^\\s*[\\[|(]?\\s*(de|ger|deu)\\s*[\\]|):\\-]", RegexOption.IGNORE_CASE)
-    val reTitleForeign = Regex("^\\s*[\\[|(]?\\s*(en|eng|uk|us|fr|it|es|tr|pl|nl|ar|multi)\\s*[\\]|):\\-]", RegexOption.IGNORE_CASE)
+    /** „DE: Titel“, „[DE] Titel“ oder „Titel (DE)“ */
+    val reTitleDE = Regex("^\\s*[\\[|(]?\\s*(de|ger|deu)\\s*[\\]|):\\-]|[\\[(|]\\s*(de|ger|deu)\\s*[\\])|]", RegexOption.IGNORE_CASE)
+    /** „EN: Titel“, „[FR] Titel“ oder „Titel (EN)“ */
+    val reTitleForeign = Regex("^\\s*[\\[|(]?\\s*(en|eng|uk|us|fr|it|es|tr|pl|nl|ar)\\s*[\\]|):\\-]|[\\[(|]\\s*(en|eng|fr|it|es|tr|pl|nl|ar)\\s*[\\])|]", RegexOption.IGNORE_CASE)
     val reForeignCat = Regex("(^|[^a-z])(uk|gb|us|usa|fr|it|es|nl|be|pl|tr|pt|ar|yu|exyu|ex-yu|al|ro|gr|ru|ua|in|pk|af|se|dk|no|fi|hu|cz|sk|hr|rs|ba|bg|ca|au|br|mx|latino|arab|arabic|turkey|turk|france|italy|italia|spain|espana|poland|polska|portugal|netherlands|nederland|kurd|persian|iran|india|africa|asia)([^a-z]|$)", RegexOption.IGNORE_CASE)
+    /** fremdsprachige Film-/Serienkategorien – ohne Kürzel, die auch deutsche Wörter sind („in“, „es“, „no“ …) */
+    val reForeignVodCat = Regex("(^|[^a-z])(en|eng|english|uk|gb|us|usa|fr|french|nl|pl|tr|pt|yu|exyu|ex-yu|ro|gr|ru|ua|pk|dk|fi|hu|cz|sk|hr|rs|bg|au|br|mx|latino|arab|arabic|turkey|turk|turkish|france|italy|italia|italian|spain|espana|spanish|poland|polska|portugal|netherlands|nederland|kurd|persian|iran|india|hindi|africa|asia|albania)([^a-z]|$)", RegexOption.IGNORE_CASE)
     private val reQPrefix = Regex("^\\s*[\\[|(]?\\s*[a-z]{2,3}\\s*[\\]|):\\-]\\s*")
     private val reNonAlnum = Regex("[^a-z0-9]+")
+    private val reMarks = Regex("\\p{M}+")
 
-    fun normQ(s: String): String {
+    fun normQ(s: String): String = reNonAlnum.replace(fold(s), "")
+
+    /** klein, Umlaute ausgeschrieben, Akzente weg (é → e), Sprach-Vorsilbe „DE:“ weg */
+    fun fold(s: String): String {
         var x = s.lowercase().replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
-        x = reQPrefix.replace(x, "")
-        return reNonAlnum.replace(x, "")
+        x = reMarks.replace(java.text.Normalizer.normalize(x, java.text.Normalizer.Form.NFD), "")
+        return reQPrefix.replace(x, "")
     }
 
-    private fun lev(a: String, b: String): Int {
-        if (a.isEmpty()) return b.length
-        if (b.isEmpty()) return a.length
-        var prev = IntArray(b.length + 1) { it }
-        var cur = IntArray(b.length + 1)
-        for (i in 1..a.length) {
-            cur[0] = i
-            for (j in 1..b.length) {
-                cur[j] = minOf(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + if (a[i - 1] == b[j - 1]) 0 else 1)
+    /** Lautschrift, damit die genaue Schreibweise egal ist: Schrek = Shrek, Titanik = Titanic, Wikings = Vikings */
+    fun sound(w: String): String {
+        val o = StringBuilder(w.length)
+        val n = w.length
+        var i = 0
+        while (i < n) {
+            val c = w[i]
+            if (!(c in 'a'..'z' || c in '0'..'9')) { i++; continue }
+            val d = if (i + 1 < n) w[i + 1] else ' '
+            val e = if (i + 2 < n) w[i + 2] else ' '
+            var step = 2
+            val r = when {
+                c == 's' && d == 'c' && e == 'h' -> { step = 3; "sh" }
+                c == 'c' && d == 'k' -> "k"
+                c == 'p' && d == 'h' -> "f"
+                c == 't' && d == 'h' -> "t"
+                c == 'q' && d == 'u' -> "kv"
+                c == 'd' && d == 't' -> "t"
+                c == 'a' && d == 'e' -> "e"
+                c == 'o' && d == 'e' -> "o"
+                c == 'u' && d == 'e' -> "u"
+                c == 'i' && d == 'e' -> "i"
+                c == 'e' && (d == 'i' || d == 'y') -> "ai"
+                else -> {
+                    step = 1
+                    when (c) { 'c' -> "k"; 'z' -> "s"; 'y' -> "i"; 'w' -> "v"; 'x' -> "ks"; else -> c.toString() }
+                }
             }
-            val t = prev; prev = cur; cur = t
+            for (ch in r) {
+                if (o.isNotEmpty() && o[o.length - 1] == ch && ch !in '0'..'9') continue
+                o.append(ch)
+            }
+            i += step
         }
-        return prev[b.length]
+        return o.toString()
     }
 
-    /** Tippfehler-tolerant: "spiederman" findet "Spider-Man" */
-    fun fuzzy(q: String, t: String): Boolean {
-        val tol = if (q.length >= 8) 2 else 1
-        for (len in maxOf(3, q.length - tol)..(q.length + tol)) {
-            if (len > t.length) continue
-            var i = 0
-            while (i + len <= t.length) {
-                if (lev(q, t.substring(i, i + len)) <= tol) return true
-                i++
+    /** Suchschlüssel eines Titels (einmal pro Liste berechnet) */
+    fun key(title: String): String = sound(fold(title))
+
+    /** erlaubte Tippfehler je Wortlänge */
+    private fun tol(len: Int) = when { len <= 3 -> 0; len <= 5 -> 1; len <= 8 -> 2; else -> 3 }
+
+    /** kleinster Abstand von p zu irgendeinem Stück von t (Levenshtein mit freiem Anfang) */
+    private fun near(p: String, t: String): Int {
+        val m = p.length
+        val col = IntArray(m + 1) { it }
+        var best = m
+        for (j in t.indices) {
+            val tc = t[j]
+            var diag = col[0]
+            col[0] = 0
+            for (i in 1..m) {
+                val tmp = col[i]
+                var v = diag + if (p[i - 1] == tc) 0 else 1
+                if (col[i] + 1 < v) v = col[i] + 1
+                if (col[i - 1] + 1 < v) v = col[i - 1] + 1
+                col[i] = v
+                diag = tmp
             }
+            if (col[m] < best) best = col[m]
         }
-        return false
+        return best
     }
+
+    class Query(text: String) {
+        val whole: String
+        val words: List<String>
+        init {
+            val f = fold(text)
+            whole = sound(f)
+            var w = f.split(reNonAlnum).map { sound(it) }.filter { it.isNotEmpty() }
+            if (w.size > 1) w = w.filter { it.length >= 2 }
+            words = if (w.isEmpty() && whole.isNotEmpty()) listOf(whole) else w
+        }
+        val isEmpty get() = whole.isEmpty()
+    }
+
+    /**
+     * Wie gut passt der Titel? -1 = gar nicht, sonst kleiner = besser.
+     * Wörter dürfen fehlen oder vertauscht sein („haus geldes“ → Haus des Geldes), Tippfehler sind erlaubt.
+     */
+    fun score(q: Query, t: String): Int {
+        if (q.isEmpty) return -1
+        if (t == q.whole) return 0
+        if (t.startsWith(q.whole)) return 1
+        if (t.contains(q.whole)) return 2
+        var sum = 0
+        var exact = true
+        for (w in q.words) {
+            if (t.contains(w)) continue
+            exact = false
+            val tl = tol(w.length)
+            if (tl == 0) return wholeFuzzy(q, t)
+            val d = near(w, t)
+            if (d > tl) return wholeFuzzy(q, t)
+            sum += d
+        }
+        return if (exact) 3 else 10 + sum
+    }
+
+    private fun wholeFuzzy(q: Query, t: String): Int {
+        if (q.words.size < 2) return -1
+        val tl = tol(q.whole.length)
+        if (tl == 0) return -1
+        val d = near(q.whole, t)
+        return if (d <= tl) 10 + d else -1
+    }
+
+    /** einfacher Treffer-Test (z. B. Filter innerhalb einer Kategorie) */
+    fun matches(query: String, title: String): Boolean = score(Query(query), key(title)) >= 0
 }
 
 // ---------- Senderbezeichnung vergleichbar machen ----------

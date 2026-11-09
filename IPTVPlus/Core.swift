@@ -65,6 +65,8 @@ struct Item: Identifiable, Hashable {
     let epgID: String
     let year: String
     let rating: String
+    /// alle Kategorien (category_ids) – ein Titel kann in mehreren stehen
+    let categoryIDs: [String]
 
     init(_ d: [String: Any], kind: Kind) {
         id = kind == .series ? str(d["series_id"]) : str(d["stream_id"])
@@ -77,7 +79,11 @@ struct Item: Identifiable, Hashable {
         let y = str(d["year"])
         year = y.isEmpty ? String(str(d["releaseDate"]).prefix(4)) : y
         rating = str(d["rating"])
+        categoryIDs = (d["category_ids"] as? [Any])?.map { str($0) }.filter { !$0.isEmpty } ?? []
     }
+
+    /// Haupt- und Zusatzkategorien
+    var cats: [String] { categoryIDs.isEmpty ? [categoryID] : categoryIDs + [categoryID] }
 }
 
 enum APIError: LocalizedError {
@@ -212,46 +218,175 @@ enum Keychain {
 
 enum Lang {
     static let reGerman = rx("(^|[^a-z])(de|ger|deu)([^a-z]|$)|deutsch|germany|österreich|schweiz")
-    static let reTitleDE = rx("^\\s*[\\[|(]?\\s*(de|ger|deu)\\s*[\\]|):\\-]")
-    static let reTitleForeign = rx("^\\s*[\\[|(]?\\s*(en|eng|uk|us|fr|it|es|tr|pl|nl|ar|multi)\\s*[\\]|):\\-]")
+    /// „DE: Titel“, „[DE] Titel“ oder „Titel (DE)“
+    static let reTitleDE = rx("^\\s*[\\[|(]?\\s*(de|ger|deu)\\s*[\\]|):\\-]|[\\[(|]\\s*(de|ger|deu)\\s*[\\])|]")
+    /// „EN: Titel“, „[FR] Titel“ oder „Titel (EN)“
+    static let reTitleForeign = rx("^\\s*[\\[|(]?\\s*(en|eng|uk|us|fr|it|es|tr|pl|nl|ar)\\s*[\\]|):\\-]|[\\[(|]\\s*(en|eng|fr|it|es|tr|pl|nl|ar)\\s*[\\])|]")
     static let reForeignCat = rx("(^|[^a-z])(uk|gb|us|usa|fr|it|es|nl|be|pl|tr|pt|ar|yu|exyu|ex-yu|al|ro|gr|ru|ua|in|pk|af|se|dk|no|fi|hu|cz|sk|hr|rs|ba|bg|ca|au|br|mx|latino|arab|arabic|turkey|turk|france|italy|italia|spain|espana|poland|polska|portugal|netherlands|nederland|kurd|persian|iran|india|africa|asia)([^a-z]|$)")
+    /// fremdsprachige Film-/Serienkategorien – ohne Kürzel, die auch deutsche Wörter sind („in“, „es“, „no“ …)
+    static let reForeignVodCat = rx("(^|[^a-z])(en|eng|english|uk|gb|us|usa|fr|french|nl|pl|tr|pt|yu|exyu|ex-yu|ro|gr|ru|ua|pk|dk|fi|hu|cz|sk|hr|rs|bg|au|br|mx|latino|arab|arabic|turkey|turk|turkish|france|italy|italia|italian|spain|espana|spanish|poland|polska|portugal|netherlands|nederland|kurd|persian|iran|india|hindi|africa|asia|albania)([^a-z]|$)")
     static let reQPrefix = rx("^\\s*[\\[|(]?\\s*[a-z]{2,3}\\s*[\\]|):\\-]\\s*")
     static let reNonAlnum = rx("[^a-z0-9]+")
 
-    static func normQ(_ s: String) -> String {
+    static func normQ(_ s: String) -> String { fold(s).rxReplace(reNonAlnum, "") }
+
+    /// klein, Umlaute ausgeschrieben, Akzente weg (é → e), Sprach-Vorsilbe „DE:“ weg
+    static func fold(_ s: String) -> String {
         var x = s.lowercased()
         x = x.replacingOccurrences(of: "ä", with: "ae").replacingOccurrences(of: "ö", with: "oe")
             .replacingOccurrences(of: "ü", with: "ue").replacingOccurrences(of: "ß", with: "ss")
-        x = x.rxReplace(reQPrefix, "")
-        return x.rxReplace(reNonAlnum, "")
+        x = x.folding(options: [.diacriticInsensitive], locale: nil)
+        return x.rxReplace(reQPrefix, "")
     }
 
-    static func lev(_ a: [Character], _ b: [Character]) -> Int {
-        if a.isEmpty { return b.count }
-        if b.isEmpty { return a.count }
-        var prev = Array(0...b.count)
-        var cur = Array(repeating: 0, count: b.count + 1)
-        for i in 1...a.count {
-            cur[0] = i
-            for j in 1...b.count {
-                cur[j] = min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1))
-            }
-            swap(&prev, &cur)
+    /// Lautschrift, damit die genaue Schreibweise egal ist: Schrek = Shrek, Titanik = Titanic, Wikings = Vikings
+    static func sound(_ w: String) -> [UInt8] {
+        let b = Array(w.utf8)
+        let n = b.count
+        var o: [UInt8] = []
+        o.reserveCapacity(n)
+        func ch(_ s: String) -> UInt8 { s.utf8.first! }
+        let a_ = ch("a"), z_ = ch("z"), d0 = ch("0"), d9 = ch("9")
+        let C = ch("c"), D = ch("d"), E = ch("e"), H = ch("h"), I = ch("i"), K = ch("k"), O = ch("o"), P = ch("p")
+        let Q = ch("q"), S = ch("s"), T = ch("t"), U = ch("u"), V = ch("v"), W = ch("w"), X = ch("x"), Y = ch("y"), Z = ch("z"), A = ch("a"), F = ch("f")
+        func push(_ c: UInt8) {
+            if let l = o.last, l == c, !(c >= d0 && c <= d9) { return }
+            o.append(c)
         }
-        return prev[b.count]
+        var i = 0
+        while i < n {
+            let c = b[i]
+            if !((c >= a_ && c <= z_) || (c >= d0 && c <= d9)) { i += 1; continue }
+            let d: UInt8 = i + 1 < n ? b[i + 1] : 32
+            let e: UInt8 = i + 2 < n ? b[i + 2] : 32
+            var step = 2
+            if c == S && d == C && e == H { push(S); push(H); step = 3 }
+            else if c == C && d == K { push(K) }
+            else if c == P && d == H { push(F) }
+            else if c == T && d == H { push(T) }
+            else if c == Q && d == U { push(K); push(V) }
+            else if c == D && d == T { push(T) }
+            else if c == A && d == E { push(E) }
+            else if c == O && d == E { push(O) }
+            else if c == U && d == E { push(U) }
+            else if c == I && d == E { push(I) }
+            else if c == E && (d == I || d == Y) { push(A); push(I) }
+            else {
+                step = 1
+                switch c {
+                case C: push(K)
+                case Z: push(S)
+                case Y: push(I)
+                case W: push(V)
+                case X: push(K); push(S)
+                default: push(c)
+                }
+            }
+            i += step
+        }
+        return o
     }
 
-    /// Tippfehler-tolerant: "spiederman" findet "Spider-Man"
-    static func fuzzy(_ q: String, _ t: String) -> Bool {
-        let qa = Array(q), ta = Array(t)
-        let tol = qa.count >= 8 ? 2 : 1
-        for L in max(3, qa.count - tol)...(qa.count + tol) where L <= ta.count {
-            var i = 0
-            while i + L <= ta.count {
-                if lev(qa, Array(ta[i..<(i + L)])) <= tol { return true }
-                i += 1
+    /// Suchschlüssel eines Titels (einmal pro Liste berechnet)
+    static func key(_ title: String) -> [UInt8] { sound(fold(title)) }
+
+    /// erlaubte Tippfehler je Wortlänge
+    static func tol(_ len: Int) -> Int { len <= 3 ? 0 : len <= 5 ? 1 : len <= 8 ? 2 : 3 }
+
+    static func contains(_ t: [UInt8], _ p: [UInt8]) -> Bool {
+        let m = p.count, n = t.count
+        if m == 0 { return true }
+        if m > n { return false }
+        var i = 0
+        while i <= n - m {
+            if t[i] == p[0] {
+                var j = 1
+                while j < m && t[i + j] == p[j] { j += 1 }
+                if j == m { return true }
             }
+            i += 1
         }
         return false
+    }
+
+    /// kleinster Abstand von p zu irgendeinem Stück von t (Levenshtein mit freiem Anfang)
+    static func near(_ p: [UInt8], _ t: [UInt8]) -> Int {
+        let m = p.count
+        var col = Array(0...m)
+        var best = m
+        for tc in t {
+            var diag = col[0]
+            col[0] = 0
+            for i in 1...m {
+                let tmp = col[i]
+                var v = diag + (p[i - 1] == tc ? 0 : 1)
+                if col[i] + 1 < v { v = col[i] + 1 }
+                if col[i - 1] + 1 < v { v = col[i - 1] + 1 }
+                col[i] = v
+                diag = tmp
+            }
+            if col[m] < best { best = col[m] }
+        }
+        return best
+    }
+
+    struct Query {
+        let whole: [UInt8]
+        let words: [[UInt8]]
+        init(_ text: String) {
+            let f = Lang.fold(text)
+            whole = Lang.sound(f)
+            var w = f.split(whereSeparator: { !($0.isASCII && ($0.isLetter || $0.isNumber)) }).map { Lang.sound(String($0)) }.filter { !$0.isEmpty }
+            if w.count > 1 { w = w.filter { $0.count >= 2 } }
+            words = w.isEmpty && !whole.isEmpty ? [whole] : w
+        }
+        var isEmpty: Bool { whole.isEmpty }
+    }
+
+    /// Wie gut passt der Titel? -1 = gar nicht, sonst kleiner = besser.
+    /// Wörter dürfen fehlen oder vertauscht sein („haus geldes“ → Haus des Geldes), Tippfehler sind erlaubt.
+    static func score(_ q: Query, _ t: [UInt8]) -> Int {
+        if q.isEmpty { return -1 }
+        if t == q.whole { return 0 }
+        if t.starts(with: q.whole) { return 1 }
+        if contains(t, q.whole) { return 2 }
+        var sum = 0
+        var exact = true
+        for w in q.words {
+            if contains(t, w) { continue }
+            exact = false
+            let tl = tol(w.count)
+            if tl == 0 { return wholeFuzzy(q, t) }
+            let d = near(w, t)
+            if d > tl { return wholeFuzzy(q, t) }
+            sum += d
+        }
+        return exact ? 3 : 10 + sum
+    }
+
+    static func wholeFuzzy(_ q: Query, _ t: [UInt8]) -> Int {
+        if q.words.count < 2 { return -1 }
+        let tl = tol(q.whole.count)
+        if tl == 0 { return -1 }
+        let d = near(q.whole, t)
+        return d <= tl ? 10 + d : -1
+    }
+
+    /// einfacher Treffer-Test (z. B. Filter innerhalb einer Kategorie)
+    static func matches(_ query: String, _ title: String) -> Bool { score(Query(query), key(title)) >= 0 }
+
+    /// Deutsch-Prüfung; die Kategorien werden nur einmal ausgewertet.
+    /// „EN: …“ → nein, „DE: …“ → ja, in irgendeiner deutschen Kategorie → ja,
+    /// nur in klar fremdsprachigen Kategorien → nein, neutrale Kategorien („Netflix“, „Kinder“) → ja
+    static func germanFilter(_ cats: [Category]) -> (Item) -> Bool {
+        let de = Set(cats.filter { $0.name.rxMatch(reGerman) }.map { $0.id })
+        let foreign = Set(cats.filter { !de.contains($0.id) && $0.name.rxMatch(reForeignVodCat) }.map { $0.id })
+        return { it in
+            if it.name.rxMatch(reTitleForeign) { return false }
+            if de.isEmpty || it.name.rxMatch(reTitleDE) { return true }
+            let ids = it.cats
+            if ids.contains(where: { de.contains($0) }) { return true }
+            return !ids.contains(where: { foreign.contains($0) })
+        }
     }
 }
