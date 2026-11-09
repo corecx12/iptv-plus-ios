@@ -2,6 +2,11 @@ package app.iptvplus.tv
 
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -33,8 +38,10 @@ class Repo(private val ctx: Context) {
     var epg: EpgData? = EpgData.load(epgFile())
     var epgLoading = false
 
-    private val catCache = HashMap<Kind, List<Category>>()
-    private val listCache = HashMap<String, List<Item>>()
+    private val catCache = java.util.concurrent.ConcurrentHashMap<Kind, List<Category>>()
+    private val listCache = java.util.concurrent.ConcurrentHashMap<String, List<Item>>()
+    /** Anbieter, die die Gesamtliste verweigern – nicht bei jeder Suche erneut versuchen */
+    private val noFullList = java.util.Collections.newSetFromMap(java.util.concurrent.ConcurrentHashMap<Kind, Boolean>())
     /** Suchschlüssel je Liste, damit nicht bei jedem Tastendruck alle Titel neu aufbereitet werden */
     private val keyCache = HashMap<Kind, Pair<List<Item>, Array<String>>>()
     private val infoCache = HashMap<String, JSONObject>()
@@ -65,7 +72,7 @@ class Repo(private val ctx: Context) {
 
     private fun epgFile() = File(ctx.cacheDir, "epg_cache.json")
 
-    private fun resetCaches() { catCache.clear(); listCache.clear(); keyCache.clear(); infoCache.clear(); epg = null; epgFile().delete() }
+    private fun resetCaches() { catCache.clear(); listCache.clear(); keyCache.clear(); noFullList.clear(); infoCache.clear(); epg = null; epgFile().delete() }
 
     /** Kennung des aktiven Kontos (für „Weiterschauen“ pro Konto) */
     val accountKey: String get() = account?.let { it.server + "|" + it.username } ?: ""
@@ -177,7 +184,8 @@ class Repo(private val ctx: Context) {
 
     suspend fun items(k: Kind, cat: String): List<Item> {
         if (cat.isEmpty()) {
-            val all = allItems(k)
+            // „Alle“ – auch bei Anbietern, die die Gesamtliste verweigern
+            val all = if (k == Kind.LIVE) allItems(k) else searchPool(k)
             return if (filterDE(k)) withContext(Dispatchers.Default) { val ok = germanFilter(k); all.filter(ok) } else all
         }
         return withContext(Dispatchers.IO) {
@@ -193,13 +201,43 @@ class Repo(private val ctx: Context) {
     }
 
     /**
+     * Alle Titel zum Durchsuchen. Viele Anbieter liefern die Gesamtliste (ohne category_id) leer
+     * oder brechen ab – dann wird Kategorie für Kategorie geladen (bei „nur deutsch“ nur die deutschen).
+     */
+    suspend fun searchPool(k: Kind): List<Item> {
+        val full = if (k in noFullList) emptyList() else
+            try { allItems(k) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { noFullList.add(k); emptyList() }
+        if (full.isNotEmpty()) return full
+        val key = "search:${k.path}:${filterDE(k)}"
+        listCache[key]?.let { return it }
+        val cats = categories(k)
+        if (cats.isEmpty()) return emptyList()
+        val gate = Semaphore(6)
+        val parts = coroutineScope {
+            cats.map { c ->
+                async(Dispatchers.IO) {
+                    gate.withPermit {
+                        try { items(k, c.id) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { emptyList() }
+                    }
+                }
+            }.awaitAll()
+        }
+        val seen = HashSet<String>()
+        val out = ArrayList<Item>()
+        for (p in parts) for (it in p) if (seen.add(it.id)) out.add(it)
+        out.trimToSize()
+        if (out.isNotEmpty()) listCache[key] = out
+        return out
+    }
+
+    /**
      * Suche über alle Kategorien: Schreibweise egal, Wörter in beliebiger Reihenfolge,
      * fehlende Wörter und Tippfehler erlaubt. Beste Treffer zuerst.
      */
     suspend fun search(k: Kind, query: String): List<Item> {
         val q = Lang.Query(query)
         if (q.isEmpty) return emptyList()
-        val raw = allItems(k)
+        val raw = searchPool(k)
         return withContext(Dispatchers.Default) {
             val keys = synchronized(keyCache) { keys(k, raw) }
             val ok = if (filterDE(k)) germanFilter(k) else null

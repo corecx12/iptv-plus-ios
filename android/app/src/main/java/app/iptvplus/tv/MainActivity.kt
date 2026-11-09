@@ -16,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -31,6 +32,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -126,6 +128,9 @@ class MainActivity : AppCompatActivity() {
     private var epgTime = "now"
     private var loadJob: Job? = null
     private var searchJob: Job? = null
+    private var listSearchJob: Job? = null
+    /** Suchbegriff, dessen Ergebnisse gerade angezeigt bzw. berechnet werden */
+    private var globalQuery = ""
     private val navButtons = LinkedHashMap<Section, TextView>()
     private val navIcons = HashMap<Section, View>()
     private var keepNavFocus = false
@@ -462,7 +467,8 @@ class MainActivity : AppCompatActivity() {
         if (detailPage.visibility == View.VISIBLE) closeDetail(restoreFocus = false)
         highlightNav()
         loadJob?.cancel()
-        searchJob?.cancel()
+        searchJob?.cancel(); listSearchJob?.cancel()
+        globalQuery = ""
         search.setText("")
         when (s) {
             Section.HOME, Section.MOVIE, Section.SERIES -> { showPage(Page.SHELVES); loadShelves(s) }
@@ -922,34 +928,49 @@ class MainActivity : AppCompatActivity() {
 
     // ---------------- Suche ----------------
 
+    private fun hideKeyboard(v: View) {
+        (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(v.windowToken, 0)
+    }
+
+    /** Suchen-/Fertig-/Weiter-Taste der Tastatur, Enter oder Play: sofort suchen */
+    private fun onSubmit(field: EditText, submit: () -> Unit) {
+        field.setOnEditorActionListener { _, _, ev ->
+            if (ev == null || ev.action == KeyEvent.ACTION_DOWN) submit()
+            true
+        }
+    }
+
     private fun setupSearch() {
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
-            override fun afterTextChanged(s: Editable?) { scheduleSearch(s?.toString() ?: "") }
+            override fun afterTextChanged(s: Editable?) { scheduleSearch(s?.toString() ?: "", now = false) }
         })
-        search.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
-                itemsView.post { itemsView.getChildAt(0)?.requestFocus() }
-                true
-            } else false
-        }
+        onSubmit(search) { submitListSearch() }
+    }
+
+    private fun submitListSearch() {
+        hideKeyboard(search)
+        scheduleSearch(search.text.toString(), now = true)
     }
 
     /** Suche innerhalb der Kategorie-Liste */
-    private fun scheduleSearch(q: String) {
-        searchJob?.cancel()
+    private fun scheduleSearch(q: String, now: Boolean) {
         if (page != Page.LIST || listKind == null) return
+        listSearchJob?.cancel()
         if (q.isBlank()) return
         val k = listKind ?: return
-        searchJob = lifecycleScope.launch {
-            delay(400)
+        listSearchJob = lifecycleScope.launch {
+            if (!now) delay(400)
             header.text = "Suche…"
             try {
                 val r = repo.search(k, q)
                 currentItems = r
-                header.text = if (r.isEmpty()) "Nichts gefunden" + (if (repo.filterDE(k)) " (nur deutsche Titel)" else "") else "Suche „$q“ · ${r.size} Treffer"
+                header.text = if (r.isEmpty()) "Nichts gefunden" + (if (repo.filterDE(k)) " (nur deutsche Titel)" else "") else "Suche „${q.trim()}“ · ${r.size} Treffer"
                 submitItems(r.map { rowFor(k, it) })
+                if (now && r.isNotEmpty()) itemsView.post { itemsView.getChildAt(0)?.requestFocus() }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 header.text = "Fehler: ${e.message}"
             }
@@ -958,46 +979,63 @@ class MainActivity : AppCompatActivity() {
 
     /** Such-Reiter: Filme, Serien und Sender auf einmal */
     private fun setupGlobalSearch() {
-        searchMsg.text = "Tippe einen Titel oder Sender ein."
+        searchMsg.text = "Titel eingeben und Play oder Suchen drücken."
         globalSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
-            override fun afterTextChanged(s: Editable?) { runGlobalSearch(s?.toString() ?: "") }
+            override fun afterTextChanged(s: Editable?) { runGlobalSearch(s?.toString() ?: "", now = false) }
         })
-        globalSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
-                searchShelves.post {
-                    val row = searchShelves.findViewHolderForAdapterPosition(0) as? ShelfAdapter.VH
-                    row?.rv?.getChildAt(0)?.requestFocus()
-                }
-                true
-            } else false
+        onSubmit(globalSearch) { submitGlobalSearch() }
+    }
+
+    private fun submitGlobalSearch() {
+        hideKeyboard(globalSearch)
+        runGlobalSearch(globalSearch.text.toString(), now = true)
+    }
+
+    private fun focusFirstSearchResult() {
+        searchShelves.post {
+            val row = searchShelves.findViewHolderForAdapterPosition(0) as? ShelfAdapter.VH
+            row?.rv?.getChildAt(0)?.requestFocus()
         }
     }
 
-    private fun runGlobalSearch(q: String) {
+    /** now = sofort suchen (Play/Suchen gedrückt) und danach zum ersten Treffer springen */
+    private fun runGlobalSearch(raw: String, now: Boolean) {
+        val q = raw.trim()
+        if (!now && q == globalQuery) return
         searchJob?.cancel()
-        if (q.isBlank()) { searchAdapter.submit(emptyList()); searchMsg.text = "Tippe einen Titel oder Sender ein."; return }
+        globalQuery = q
+        if (q.isEmpty()) { searchAdapter.submit(emptyList()); searchMsg.text = "Titel eingeben und Play oder Suchen drücken."; return }
         if (repo.account == null) { searchMsg.text = "Noch kein Konto eingerichtet."; return }
         searchJob = lifecycleScope.launch {
-            delay(450)
-            searchMsg.text = "Suche…"
-            try {
-                val movies = repo.search(Kind.MOVIE, q).take(40)
-                val series = repo.search(Kind.SERIES, q).take(40)
-                val live = repo.search(Kind.LIVE, q).take(40)
-                val shelves = listOf(
-                    Shelf("Filme", CardStyle.POSTER, movies.map { posterCard(Kind.MOVIE, it) }),
-                    Shelf("Serien", CardStyle.POSTER, series.map { posterCard(Kind.SERIES, it) }),
-                    Shelf("Sender", CardStyle.CHANNEL, live.map { channelCard(it) })
-                ).filter { it.cards.isNotEmpty() }
-                searchAdapter.submit(shelves)
-                searchMsg.text = if (shelves.isEmpty()) "Keine Treffer für „$q“." else ""
+            if (!now) delay(450)
+            searchMsg.text = "Suche „$q“…"
+            val errors = ArrayList<String>()
+            suspend fun part(k: Kind): List<Item> = try {
+                repo.search(k, q).take(40)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
-                searchMsg.text = "Suche nicht möglich: ${e.message}"
+                errors.add(e.message ?: "Fehler"); emptyList()
             }
+            // Filme, Serien und Sender gleichzeitig laden/durchsuchen
+            val m = async { part(Kind.MOVIE) }
+            val se = async { part(Kind.SERIES) }
+            val l = async { part(Kind.LIVE) }
+            val movies = m.await(); val series = se.await(); val live = l.await()
+            val shelves = listOf(
+                Shelf("Filme", CardStyle.POSTER, movies.map { posterCard(Kind.MOVIE, it) }),
+                Shelf("Serien", CardStyle.POSTER, series.map { posterCard(Kind.SERIES, it) }),
+                Shelf("Sender", CardStyle.CHANNEL, live.map { channelCard(it) })
+            ).filter { it.cards.isNotEmpty() }
+            searchAdapter.submit(shelves)
+            searchMsg.text = when {
+                shelves.isNotEmpty() -> ""
+                errors.isNotEmpty() -> "Suche nicht möglich: ${errors.first()}"
+                else -> "Keine Treffer für „$q“." + if (repo.deOnly) " (nur deutsche Filme und Serien)" else ""
+            }
+            if (now && shelves.isNotEmpty()) focusFirstSearchResult()
         }
     }
 
@@ -2003,6 +2041,18 @@ class MainActivity : AppCompatActivity() {
             }
             if (code in fullKeys) {
                 if (down) handleFullKey(code, e.repeatCount)
+                return true
+            }
+        }
+        // Play im Suchfeld startet die Suche
+        if (code == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE || code == KeyEvent.KEYCODE_MEDIA_PLAY || code == KeyEvent.KEYCODE_SEARCH) {
+            val f = currentFocus
+            if (f === globalSearch || (code == KeyEvent.KEYCODE_SEARCH && page == Page.SEARCH)) {
+                if (down && e.repeatCount == 0) submitGlobalSearch()
+                return true
+            }
+            if (f === search) {
+                if (down && e.repeatCount == 0) submitListSearch()
                 return true
             }
         }

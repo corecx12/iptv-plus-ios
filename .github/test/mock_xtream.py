@@ -48,6 +48,13 @@ for i in range(int(__import__('os').environ.get('SERIES','5000'))):
                    "rating": "7.1", "backdrop_path": [img("backdrop", i % 20, 640, 360)] if i % 2 else [], "youtube_trailer": "",
                    "episode_run_time": "45", "category_id": c["category_id"], "category_ids": [int(c["category_id"])]})
 
+# echte Titel für den Such-Test (stehen in deutschen Kategorien)
+NOFULL = __import__('os').environ.get('NOFULL') == '1'
+for j, t in enumerate(["DE: Harry Potter und der Stein der Weisen (2001)", "DE: Spider-Man: No Way Home (2021)", "DE: Shrek 2 (2004)",
+                       "DE: Fluch der Karibik (2003)", "EN: Harry Potter and the Chamber of Secrets (2002)"]):
+    movies[j * 7]["name"] = t
+series[0]["name"] = "DE: Haus des Geldes"; series[1]["name"] = "DE: Game of Thrones"
+
 def vod_info(i):
     return {"info": {"movie_image": img("poster", i % 80, 200, 300), "backdrop_path": [img("backdrop", i % 20, 640, 360)] if i % 2 else [],
                      "plot": "Ein spannender Testfilm mit einer langen Beschreibung, damit man sieht, wie der Text umbricht.",
@@ -93,6 +100,8 @@ class H(BaseHTTPRequestHandler):
         if not u.path.endswith("player_api.php"): self.send_response(404); self.end_headers(); return
         a = q.get("action"); cat = q.get("category_id")
         def flt(lst): return [x for x in lst if not cat or x["category_id"] == cat]
+        # NOFULL=1: wie viele echte Anbieter – Gesamtliste ohne category_id wird verweigert
+        if NOFULL and not cat and a in ("get_vod_streams", "get_series"): return self.send(b"[]")
         if a is None:
             body = {"user_info": {"username": "test", "password": "test", "auth": 1, "status": "Active", "exp_date": str(NOW + 86400 * 90),
                                   "is_trial": "0", "active_cons": "0", "max_connections": "2", "allowed_output_formats": ["m3u8", "ts"]},
