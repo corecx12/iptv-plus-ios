@@ -95,7 +95,7 @@ class CardAdapter(
 
     private fun size(c: Context): Pair<Int, Int> = when (style) {
         CardStyle.POSTER -> dp(c, 124) to dp(c, 186)
-        CardStyle.WIDE -> dp(c, 232) to dp(c, 130)
+        CardStyle.WIDE -> dp(c, 232) to dp(c, 112)
         CardStyle.CHANNEL -> dp(c, 196) to dp(c, 110)
     }
 

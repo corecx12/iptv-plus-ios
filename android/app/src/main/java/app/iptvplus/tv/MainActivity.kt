@@ -1173,6 +1173,7 @@ class MainActivity : AppCompatActivity() {
         detailKicker.text = if (k == Kind.MOVIE) "Film" else "Serie"
         detailTitle.text = clean(it.name)
         detailMeta.text = it.year
+        detailPlot.maxLines = 4
         detailPlot.text = ""
         detailBackdrop.setImageDrawable(null)
         detailBackdrop.load(it.icon) { crossfade(250) }
@@ -1190,6 +1191,8 @@ class MainActivity : AppCompatActivity() {
             detailPlot.text = m.plot.ifEmpty { "Keine Beschreibung verfügbar." }
             if (m.backdrop.isNotEmpty() && m.backdrop != it.icon) detailBackdrop.load(m.backdrop) { crossfade(400) }
             if (k == Kind.SERIES) {
+                // bei Serien kürzerer Text oben, damit er den Staffel-/Episodenblock unten nicht überlappt
+                detailPlot.maxLines = 2
                 seasons = parseEpisodes(o)
                 showSeasons()
                 buildDetailButtons()
